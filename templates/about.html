@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi Sono{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 md:py-16">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-8">
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+                    <div class="w-48 h-48 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
+                        <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Roberto D'Alicandro" class="w-full h-full object-cover" style="transform: scale(1.2); object-position: center center;">
+                    </div>
+                    <div class="flex-grow text-center md:text-left">
+                        <h1 class="text-3xl font-bold text-gray-900 mb-4">Chi Sono</h1>
+                        <p class="text-lg text-gray-600 mb-6">Mi chiamo Roberto D'Alicandro e sono una persona che ha accumulato tante esperienze nella vita, lavorative e non. Sono appassionato della vita e la ringrazio per tutti i doni che mi ha fatto. Sono un nonno felice che ha scelto di non arrendersi alla noia della pensione tradizionale.</p>
+                        <p class="text-lg text-gray-600 mb-6">Dopo il pensionamento nel luglio 2019, ho rifiutato di essere catalogato come una 'risorsa anziana' non considerata dalla società moderna. Invece, ho scelto di reinventarmi, dedicandomi alle evoluzioni tecnologiche e in particolare all'Intelligenza Artificiale.</p>
+                        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Project Management</span>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Tecnologie Biomedicali</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Innovazione Digitale</span>
+                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">Leadership</span>
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">Pubblica Amministrazione</span>
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">Intelligenza Artificiale</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 space-y-8">
+                    <section>
+                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">🚀 Il Mio Percorso Professionale</h2>
+                        <p class="text-gray-600 mb-6">La mia carriera è stata un viaggio attraverso le evoluzioni tecnologiche e organizzative degli ultimi decenni:</p>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Anni '80-'90: I Pionieri della Tecnologia Medica</h3>
+                                <p class="text-gray-600">Ho iniziato il mio percorso in Honeywell e Hewlett & Packard, specializzandomi nelle tecnologie biomedicali e nell'informatica applicata alla medicina. Un settore nascente che richiedeva visione e coraggio.</p>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Anni '90-2000: L'Innovazione nella Sanità</h3>
+                                <p class="text-gray-600">Con Shared Medica Solutions, ho contribuito a far crescere una startup da zero a 35 milioni di euro, sviluppando soluzioni informatiche integrate per la sanità.</p>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">2000-2020: Leader nella Pubblica Amministrazione</h3>
+                                <p class="text-gray-600">In Siemens, CapGemini e altre realtà, ho coordinato progetti strategici nazionali come la Carta d'Identità Elettronica, il Permesso di Soggiorno Elettronico e sistemi di voto elettronico. Sono stato premiato come miglior direttore CapGemini WorldWide nel 2006/2007.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="space-y-8">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-900 mb-4">La Mia Missione</h2>
+                            <p class="text-gray-600">Dal 2019 mi sto dedicando intensamente all'Intelligenza Artificiale. Studio e applico queste tecnologie per creare strumenti innovativi che permettano di trasferire le mie competenze a vantaggio di chi ne possa essere interessato.</p>
+                        </div>
+
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-900 mb-4">🎯 I Miei Interessi</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🃏</span>
+                                    <span class="text-gray-600">Bridge - Appassionato giocatore</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🏋️</span>
+                                    <span class="text-gray-600">Fitness - Centro fitness regolare</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">📚</span>
+                                    <span class="text-gray-600">Lettura - Letteratura contemporanea</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🌍</span>
+                                    <span class="text-gray-600">Viaggi - Culture e fotografia</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🎹</span>
+                                    <span class="text-gray-600">Musica - Pianoforte e tastiere</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-900 mb-4">💬 La Mia Filosofia</h2>
+                            <p class="text-gray-600 mb-4">Non mi riconosco nel ruolo di 'risorsa anziana' che non viene tenuta in considerazione dalla società moderna. Ho scelto di reinventarmi e di continuare a contribuire con la mia esperienza e passione per l'innovazione.</p>
+                            <p class="text-gray-600">Credo fermamente che l'esperienza, unita alla curiosità per le nuove tecnologie, possa creare valore unico. Per questo mi dedico a sviluppare progetti che permettano di trasferire competenze e conoscenze alle nuove generazioni.</p>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Contattami</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                                <a href="mailto:roberto.dalicandro@gmail.com" class="text-blue-600 hover:text-blue-800">roberto.dalicandro@gmail.com</a>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                <span class="text-gray-600">+39 348 070 16 40</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                                <a href="https://linkedin.com/in/roberto-d-alicandro-138598" target="_blank" class="text-blue-600 hover:text-blue-800">LinkedIn</a>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span class="text-gray-600">Roma, Italia</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
