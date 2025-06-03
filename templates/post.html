@@ -1,251 +1,41 @@
-{% extends 'base.html' %}
-
-{% block title %}{{ post.title }}{% endblock %}
-
-{% block extra_head %}
-<style>
-    .prose h2 {
-        @apply text-3xl font-bold text-gray-900 mb-4 mt-8;
-    }
-    .prose h3 {
-        @apply text-2xl font-bold text-gray-900 mb-3 mt-6;
-    }
-    .prose h4 {
-        @apply text-xl font-bold text-gray-900 mb-2 mt-4;
-    }
-    .prose p {
-        @apply text-gray-700 mb-4;
-    }
-    .prose ul {
-        @apply list-disc list-inside mb-4 space-y-2;
-    }
-    .prose li {
-        @apply text-gray-700;
-    }
-    .prose .bg-white {
-        @apply rounded-lg shadow-md;
-    }
-    .chart-container canvas {
-        @apply bg-white rounded-lg shadow-md p-4;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
-        <!-- Post Content -->
-        <article class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-            <div class="p-8">
-                <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ post.title }}</h1>
-                <div class="text-gray-600 mb-8">
-                    <time datetime="{{ post.created_at }}">{{ post.created_at.strftime('%d %B %Y') }}</time>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }} - Blog RdA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Blog RdA</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/about">Chi Sono</a></li>
+                <li><a href="/contact">Contatti</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article class="blog-post">
+            <header class="post-header">
+                <h2>{{ post.title }}</h2>
+                <div class="post-meta">
+                    <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
                 </div>
-                <div class="prose max-w-none">
-                    {{ post.content|safe }}
-                </div>
+            </header>
+            <div class="post-content">
+                {{ post.content | safe }}
             </div>
+            <footer class="post-footer">
+                <a href="/blog" class="back-to-blog">← Torna al Blog</a>
+            </footer>
         </article>
-
-        <!-- Comments Section -->
-        <section class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Partecipa alla discussione</h2>
-                
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="mb-6 p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                
-                <!-- Comment Form -->
-                <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="space-y-6 mb-8">
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
-                        <input type="text" name="name" id="name" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" id="email" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label for="message" class="block text-sm font-medium text-gray-700">Il tuo commento</label>
-                        <textarea name="message" id="message" rows="4" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            placeholder="Condividi i tuoi pensieri su questo articolo..."></textarea>
-                    </div>
-                    
-                    <div>
-                        <button type="submit"
-                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Invia commento
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Comments List -->
-                <div class="space-y-6">
-                    <h3 class="text-xl font-semibold text-gray-900">Commenti</h3>
-                    {% if comments %}
-                        {% for comment in comments %}
-                        <div class="border-b border-gray-200 pb-6 last:border-b-0">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                        <span class="text-xl text-gray-600">{{ comment.name[0]|upper }}</span>
-                                    </div>
-                                </div>
-                                <div class="ml-4 flex-grow">
-                                    <div class="flex items-center justify-between">
-                                        <h4 class="text-lg font-medium text-gray-900">{{ comment.name }}</h4>
-                                        <time class="text-sm text-gray-500">{{ comment.date.strftime('%d %B %Y') }}</time>
-                                    </div>
-                                    <div class="mt-2 text-gray-600">
-                                        {{ comment.message }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-gray-600">Non ci sono ancora commenti. Sii il primo a commentare!</p>
-                    {% endif %}
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div class="max-w-4xl mx-auto mt-8">
-        <a href="{{ url_for('blog') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Torna al Blog
-        </a>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize charts if they exist
-    if (document.getElementById('jobMarketChart')) {
-        const jobMarketCtx = document.getElementById('jobMarketChart').getContext('2d');
-        new Chart(jobMarketCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Posti Sostituiti', 'Posti Creati'],
-                datasets: [{
-                    label: 'Milioni di Posti di Lavoro (Stima WEF)',
-                    data: [85, 97],
-                    backgroundColor: [
-                        'rgba(239, 68, 68, 0.6)',
-                        'rgba(34, 197, 94, 0.6)'
-                    ],
-                    borderColor: [
-                        'rgba(239, 68, 68, 1)',
-                        'rgba(34, 197, 94, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y} milioni`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Milioni di Posti'
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Initialize skill cards if they exist
-    const skillCards = document.querySelectorAll('.skill-card');
-    const skillDescriptionContainer = document.getElementById('skill-description');
-
-    if (skillCards.length > 0 && skillDescriptionContainer) {
-        const skillDescriptions = {
-            critico: {
-                title: 'Pensiero Critico e Problem-Solving',
-                text: "L'IA fornisce dati, ma il discernimento umano è insostituibile. Questa competenza ti permette di analizzare le informazioni generate dall'IA, identificare bias, porre domande più profonde e risolvere problemi complessi che non hanno una soluzione algoritmica. È l'abilità di dare un senso al rumore."
-            },
-            creativita: {
-                title: 'Creatività e Innovazione',
-                text: "Mentre l'IA può ottimizzare e replicare, la vera innovazione nasce dalla creatività umana. È la capacità di connettere idee apparentemente distanti, immaginare il 'what if' e creare qualcosa di genuinamente nuovo. L'IA diventa uno strumento per accelerare il processo creativo, non per sostituirlo."
-            },
-            agilita: {
-                title: 'Agilità di Apprendimento (Learning Agility)',
-                text: "In un mondo in costante evoluzione, la capacità di imparare, de-imparare e ri-imparare rapidamente è la competenza fondamentale. Significa essere aperti a nuove esperienze, cercare feedback e adattare il proprio comportamento e le proprie competenze in modo proattivo. Non si tratta di cosa sai, ma di quanto velocemente puoi imparare."
-            },
-            empatia: {
-                title: 'Empatia e Intelligenza Emotiva',
-                text: 'Paradossalmente, più la tecnologia avanza, più le abilità umane diventano preziose. L\'empatia permette di comprendere i bisogni dei clienti e dei colleghi, guidare team con umanità e costruire relazioni di fiducia. Sono le soft skills a rendere "dura" e sostenibile l'integrazione tecnologica.'
-            },
-            prompt: {
-                title: 'Prompt Engineering',
-                text: "Questa è la nuova frontiera della comunicazione uomo-macchina. È l'arte e la scienza di formulare le giuste domande e istruzioni per guidare i modelli di IA generativa. Padroneggiare questa abilità significa trasformare l'IA da uno strumento generico a un assistente specializzato e incredibilmente potente, capace di produrre esattamente i risultati desiderati."
-            }
-        };
-
-        skillCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const skillKey = card.dataset.skill;
-                
-                skillCards.forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-
-                const skillInfo = skillDescriptions[skillKey];
-                skillDescriptionContainer.innerHTML = `
-                    <h4 class="text-xl font-bold mb-2 text-blue-700">${skillInfo.title}</h4>
-                    <p class="text-gray-700">${skillInfo.text}</p>
-                `;
-            });
-        });
-        
-        skillCards[0].click();
-    }
-
-    // Initialize fade-in animations
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, {
-        threshold: 0.1
-    });
-
-    document.querySelectorAll('.fade-in').forEach(el => {
-        observer.observe(el);
-    });
-});
-</script>
-{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2024 Blog RdA. Tutti i diritti riservati.</p>
+    </footer>
+</body>
+</html>

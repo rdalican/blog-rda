@@ -19,8 +19,37 @@
         </nav>
     </header>
     <main>
-        <h2>Benvenuto nel mio blog</h2>
-        <p>Questo è un blog dedicato alla condivisione di idee e riflessioni.</p>
+        <section class="welcome">
+            <h2>Benvenuto nel mio blog</h2>
+            <p>Questo è un blog dedicato alla condivisione di idee e riflessioni.</p>
+        </section>
+
+        <section class="latest-posts">
+            <h3>Ultimi Articoli</h3>
+            <div class="blog-posts">
+                {% if posts %}
+                    {% for post in posts %}
+                        <article class="post-card">
+                            <h4><a href="/blog/{{ post.slug }}">{{ post.title }}</a></h4>
+                            <div class="post-meta">
+                                <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
+                            </div>
+                            <div class="post-excerpt">
+                                {{ post.content[:150] | safe }}...
+                            </div>
+                            <a href="/blog/{{ post.slug }}" class="read-more">Leggi di più</a>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p>Nessun articolo disponibile al momento.</p>
+                {% endif %}
+            </div>
+            {% if posts %}
+                <div class="view-all">
+                    <a href="/blog" class="read-more">Vedi tutti gli articoli →</a>
+                </div>
+            {% endif %}
+        </section>
     </main>
     <footer>
         <p>&copy; 2024 Blog RdA. Tutti i diritti riservati.</p>
