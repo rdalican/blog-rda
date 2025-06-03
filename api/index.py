@@ -1,19 +1,18 @@
-from flask import Flask
-import sys
+from flask import Flask, render_template, jsonify
 import os
 
-# Add the parent directory to Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+app = Flask(__name__, 
+           template_folder='../templates',  # Point to templates in parent directory
+           static_folder='../static')       # Point to static in parent directory
 
-from app import app
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/api/health')
+def health():
+    return jsonify({"status": "ok"})
 
 def handler(request):
     """Handle a request to the Flask application."""
-    with app.request_context(request):
-        try:
-            return app.dispatch_request()
-        except Exception as e:
-            return {
-                "statusCode": 500,
-                "body": str(e)
-            } 
+    return app(request) 
