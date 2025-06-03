@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anziano? No, Risorsa! - L'App Interattiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-button.active { 
+            border-color: #3b82f6; 
+            background-color: #eff6ff;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .icon-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .icon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-gray-800">
+
+    <main class="container mx-auto px-4 py-8 md:py-16">
+
+        <header class="text-center mb-16 md:mb-24">
+            <h1 class="text-4xl md:text-6xl font-bold text-blue-900 mb-4">Anziano? No, Risorsa!</h1>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">Un'esplorazione interattiva per riscoprire il valore dell'esperienza nell'era post-lavorativa.</p>
+        </header>
+
+        <section id="problema" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3 text-gray-900">Il Paradosso della Pensione</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">L'aumento dell'aspettativa di vita è una grande conquista, ma spesso introduce una sfida inaspettata: l'inattività post-pensionamento. Questa fase può innescare un circolo vizioso in cui l'inattività porta a un declino, che a sua volta aumenta i costi per la società e diminuisce il benessere individuale. Questo grafico illustra il concetto del "cane che si morde la coda" descritto nel documento.</p>
+            </div>
+            <div class="chart-container">
+                <canvas id="viciousCycleChart"></canvas>
+            </div>
+        </section>
+
+        <section id="svolta" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3 text-gray-900">La Svolta: l'Esperienza è Oro</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">Poi, all'improvviso, arriva l'illuminazione. Un consiglio dato, un problema risolto grazie al proprio intuito, la voglia di imparare che non si è mai spenta. Ci si rende conto che decenni di sfide, successi ed errori non sono da archiviare, ma costituiscono un tesoro di valore inestimabile. Questa sezione esplora i pilastri di questa nuova consapevolezza.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="icon-card bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
+                    <div class="text-4xl mb-4">💡</div>
+                    <h3 class="text-xl font-semibold mb-2 text-blue-800">Energia Inesauribile</h3>
+                    <p class="text-gray-600">La sensazione di avere ancora energie mentali e fisiche da offrire, e la frustrazione nel vederle inutilizzate.</p>
+                </div>
+                <div class="icon-card bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
+                    <div class="text-4xl mb-4">🧠</div>
+                    <h3 class="text-xl font-semibold mb-2 text-blue-800">Curiosità Eterna</h3>
+                    <p class="text-gray-600">Sentirsi "un giovane ventenne con la curiosità che divora il cervello", con il desiderio di imparare fino all'ultimo giorno.</p>
+                </div>
+                <div class="icon-card bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
+                    <div class="text-4xl mb-4">🤝</div>
+                    <h3 class="text-xl font-semibold mb-2 text-blue-800">Il Valore del Consiglio</h3>
+                    <p class="text-gray-600">La riscoperta del proprio valore quando l'esperienza si rivela utile per guidare le nuove generazioni.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="progetto" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3 text-gray-900">Il Progetto: il Deposito delle Risorse</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">Dall'idea di condivisione nasce un progetto concreto: creare un "repository" di idee, esperienze e strumenti. Un luogo virtuale dove l'esperienza non solo viene conservata, ma diventa motore di innovazione e collaborazione. Esplora le aree di sviluppo proposte cliccando sulle diverse schede.</p>
+            </div>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div id="tab-buttons" class="flex md:flex-col md:w-1/3 overflow-x-auto pb-2">
+                    <button data-tab="commerciale" class="tab-button text-left w-full p-4 rounded-md border-2 border-transparent whitespace-nowrap mr-2 md:mr-0 md:mb-2 active">📈 Area Commerciale</button>
+                    <button data-tab="ia" class="tab-button text-left w-full p-4 rounded-md border-2 border-transparent whitespace-nowrap mr-2 md:mr-0 md:mb-2">🤖 Supporto AI</button>
+                    <button data-tab="pa" class="tab-button text-left w-full p-4 rounded-md border-2 border-transparent whitespace-nowrap mr-2 md:mr-0 md:mb-2">🏛️ Gare e PA</button>
+                    <button data-tab="hobby" class="tab-button text-left w-full p-4 rounded-md border-2 border-transparent whitespace-nowrap">🛠️ Hobby e Fai-da-te</button>
+                </div>
+                <div class="md:w-2/3 bg-white p-6 md:p-8 rounded-lg shadow-inner border border-gray-200 min-h-[300px]">
+                    <div id="tab-commerciale" class="tab-content active">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-900">Repository per il Business</h3>
+                        <p class="text-gray-700 leading-relaxed">L'idea è di creare un deposito di idee, esperienze e soluzioni per problematiche commerciali, basato su un'esperienza trentennale. Un punto di riferimento per giovani professionisti e imprenditori per trovare risposte pratiche, evitare errori comuni e accelerare la propria crescita.</p>
+                    </div>
+                    <div id="tab-ia" class="tab-content">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-900">Intelligenza Artificiale al Servizio di Tutti</h3>
+                        <p class="text-gray-700 leading-relaxed">Sfruttare le moderne tecnologie di Intelligenza Artificiale per generare strumenti di supporto. Si potrebbe creare un software distribuito gratuitamente, con video esplicativi e "prompt" di esempio per aiutare gli utenti a risolvere problemi specifici, personalizzando il codice in base ai diversi settori di mercato.</p>
+                    </div>
+                    <div id="tab-pa" class="tab-content">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-900">Gestione Appalti Pubblici</h3>
+                        <p class="text-gray-700 leading-relaxed">Un'area dedicata allo scambio di esperienze e best practice sulla gestione delle gare d'appalto per le Pubbliche Amministrazioni. Un tema complesso dove l'esperienza maturata sul campo può fare la differenza, aiutando le aziende a navigare la burocrazia con maggiore efficacia.</p>
+                    </div>
+                    <div id="tab-hobby" class="tab-content">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-900">Condivisione di Passioni</h3>
+                        <p class="text-gray-700 leading-relaxed">Creare aree di condivisione su temi ludici e creativi. Dal Bridge alla creazione di macchine a controllo numerico fatte in casa, fino alla condivisione dei progetti realizzati. Un modo per unire persone con interessi simili e stimolare la creatività e l'apprendimento reciproco.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="invito" class="text-center bg-blue-600 text-white p-8 md:p-12 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4">E tu, che ne dici?</h2>
+            <p class="max-w-3xl mx-auto text-blue-100 mb-6">Questo progetto è un invito. Un invito a non considerare la pensione come un traguardo, ma come un nuovo punto di partenza. L'esercito delle risorse attende nuove reclute per dimostrare che l'esperienza è il motore del futuro.</p>
+            <button class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-blue-100 transition-colors">Partecipa all'Idea!</button>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('viciousCycleChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Inattività / Inedia', 'Declino Fisico e Cognitivo', 'Aumento Costi Sociali'],
+                    datasets: [{
+                        label: 'Impatto del Circolo Vizioso',
+                        data: [60, 80, 100],
+                        backgroundColor: [
+                            'rgba(251, 146, 60, 0.6)',
+                            'rgba(239, 68, 68, 0.6)',
+                            'rgba(29, 78, 216, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(251, 146, 60, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(29, 78, 216, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    let text = '';
+                                    if (context.parsed.x !== null) {
+                                       switch(context.label) {
+                                            case 'Inattività / Inedia':
+                                                text = 'La mancanza di stimoli porta al declino.';
+                                                break;
+                                            case 'Declino Fisico e Cognitivo':
+                                                text = 'Peggiora la qualità della vita individuale.';
+                                                break;
+                                            case 'Aumento Costi Sociali':
+                                                text = 'L\'individuo diventa più "costoso" per la società.';
+                                                break;
+                                       }
+                                    }
+                                    return text;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            display: false
+                        },
+                        y: {
+                           ticks: {
+                                font: {
+                                    size: 14
+                                }
+                           }
+                        }
+                    }
+                }
+            });
+
+            const tabButtonsContainer = document.getElementById('tab-buttons');
+            const tabs = tabButtonsContainer.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabButtonsContainer.addEventListener('click', function(event) {
+                const clickedTab = event.target.closest('.tab-button');
+                if (!clickedTab) return;
+
+                const targetTab = clickedTab.dataset.tab;
+
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                });
+                clickedTab.classList.add('active');
+
+                contents.forEach(c => {
+                    c.classList.remove('active');
+                    if (c.id === 'tab-' + targetTab) {
+                        c.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

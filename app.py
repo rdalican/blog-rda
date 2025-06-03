@@ -11,17 +11,22 @@ import os
 load_dotenv('Config_Email.env')
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
-app.config['SECRET_KEY'] = 'your_secret_key_here'  # Cambia questa chiave in produzione
+# Modifica per Vercel: usa un database in memoria per l'ambiente di produzione
+if os.environ.get('VERCEL_ENV') == 'production':
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key_here')
 
 # Email configuration
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
-app.config['MAIL_RECIPIENT'] = os.getenv('MAIL_RECIPIENT')
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
+app.config['MAIL_RECIPIENT'] = os.environ.get('MAIL_RECIPIENT')
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -31,6 +36,30 @@ try:
 except Exception as e:
     print(f"Errore durante l'inizializzazione di Notion: {str(e)}")
     notion = None
+
+# Inizializza il database e aggiungi alcuni post di esempio se siamo in produzione
+def init_db():
+    with app.app_context():
+        db.create_all()
+        # Se siamo su Vercel e il database è vuoto, aggiungi alcuni post di esempio
+        if os.environ.get('VERCEL_ENV') == 'production' and not Post.query.first():
+            sample_posts = [
+                {
+                    'title': 'Benvenuto nel Blog',
+                    'content': 'Questo è un post di esempio creato automaticamente.'
+                },
+                {
+                    'title': 'Come Funziona',
+                    'content': 'Questo blog usa Flask, SQLite e Notion per gestire i commenti.'
+                }
+            ]
+            for post_data in sample_posts:
+                post = Post(title=post_data['title'], content=post_data['content'])
+                db.session.add(post)
+            db.session.commit()
+
+# Inizializza il database
+init_db()
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
