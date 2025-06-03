@@ -1,10 +1,11 @@
-from flask import Flask, render_template, url_for, flash, redirect, request
+from flask import Flask, render_template, url_for, flash, redirect, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import re
 from notion_manager import NotionManager
 from flask_mail import Mail, Message
 import os
+import traceback
 
 app = Flask(__name__, 
            template_folder='../templates',  # Point to templates in parent directory
@@ -26,10 +27,28 @@ app.config['MAIL_RECIPIENT'] = os.environ.get('MAIL_RECIPIENT')
 db = SQLAlchemy(app)
 mail = Mail(app)
 
+# Error handling
+@app.errorhandler(500)
+def handle_500(error):
+    app.logger.error('Server Error: %s', error)
+    app.logger.error(traceback.format_exc())
+    return jsonify(error=str(error)), 500
+
+@app.errorhandler(404)
+def handle_404(error):
+    return jsonify(error='Not Found'), 404
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    app.logger.error('Unhandled Exception: %s', error)
+    app.logger.error(traceback.format_exc())
+    return jsonify(error=str(error)), 500
+
 try:
     notion = NotionManager()
 except Exception as e:
-    print(f"Errore durante l'inizializzazione di Notion: {str(e)}")
+    app.logger.error(f"Errore durante l'inizializzazione di Notion: {str(e)}")
+    app.logger.error(traceback.format_exc())
     notion = None
 
 class Post(db.Model):
