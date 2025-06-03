@@ -8,3 +8,4 @@ click==8.1.7
 itsdangerous==2.1.2
 python-dotenv==1.0.1
 Flask-Mail==0.9.1
+notion-client==2.2.1
