@@ -9,4 +9,5 @@ from app import app
 
 # Vercel requires a handler function
 def handler(request):
-    return app 
+    with app.app_context():
+        return app(request) 
