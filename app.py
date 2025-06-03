@@ -3,11 +3,28 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import re
 from notion_manager import NotionManager
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv('Config_Email.env')
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SECRET_KEY'] = 'your_secret_key_here'  # Cambia questa chiave in produzione
+
+# Email configuration
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+app.config['MAIL_RECIPIENT'] = os.getenv('MAIL_RECIPIENT')
+
 db = SQLAlchemy(app)
+mail = Mail(app)
 
 try:
     notion = NotionManager()
@@ -54,10 +71,30 @@ def add_comment(post_id):
     name = request.form.get('name')
     email = request.form.get('email')
     message = request.form.get('message')
+    
+    # Get the post title
+    post = Post.query.get_or_404(post_id)
+    post_title = post.title
 
     success, result = notion.add_comment(name, email, message, str(post_id))
 
     if success:
+        # Send email notification with post title
+        try:
+            msg = Message(
+                f'Nuovo commento sul post: {post_title}',
+                recipients=[app.config['MAIL_RECIPIENT']],
+                body=f'''Nuovo commento ricevuto:
+                
+Da: {name} ({email})
+Post: {post_title}
+Messaggio:
+{message}'''
+            )
+            mail.send(msg)
+        except Exception as e:
+            print(f"Errore nell'invio dell'email: {str(e)}")
+
         flash('Grazie per il tuo commento! Verrà pubblicato dopo la moderazione.', 'success')
     else:
         error_msg = f'Errore: {result}' if result else 'Si è verificato un errore durante l\'invio del commento.'
@@ -89,6 +126,22 @@ def contact():
         success, result = notion.add_contact(name, email, message, company)
 
         if success:
+            # Send email notification
+            try:
+                msg = Message(
+                    'Nuovo messaggio dal form di contatto',
+                    recipients=[app.config['MAIL_RECIPIENT']],
+                    body=f'''Nuovo messaggio ricevuto:
+                    
+Da: {name} ({email})
+Azienda: {company}
+Messaggio:
+{message}'''
+                )
+                mail.send(msg)
+            except Exception as e:
+                print(f"Errore nell'invio dell'email: {str(e)}")
+
             flash('Grazie per avermi contattato! Ti risponderò il prima possibile.', 'success')
         else:
             error_msg = f'Errore: {result}' if result else 'Si è verificato un errore durante l\'invio del messaggio.'
