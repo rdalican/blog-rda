@@ -12,6 +12,22 @@ def index():
     """
     return render_template('index.html')
 
+@app.route('/about')
+def about():
+    """
+    Questa funzione gestisce la rotta '/about'.
+    Utilizza render_template per mostrare il file 'about.html'.
+    """
+    return render_template('about.html')
+
+@app.route('/blog')
+def blog():
+    """
+    Questa funzione gestisce la rotta '/blog'.
+    Utilizza render_template per mostrare il file 'blog.html'.
+    """
+    return render_template('blog.html')
+
 # Questo blocco permette di eseguire l'app localmente per test
 # PythonAnywhere non lo userà direttamente, ma è buona norma includerlo.
 if __name__ == '__main__':

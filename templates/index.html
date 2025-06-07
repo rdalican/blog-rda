@@ -3,247 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infografica: Il Mercato dell'Esperienza Senior</title>
+    <title>Slate Star Codex</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Brilliant Blues & Amber -->
-    <!-- Application Structure Plan: L'infografica è strutturata come un'analisi di mercato in 5 sezioni a scorrimento. 1) Market Overview: definisce il "problema" come un'opportunità di mercato, con un dato chiave sull'aumento dell'aspettativa di vita e un'analisi della percezione attuale. 2) Asset Analysis: quantifica la "risorsa esperienza" in vari settori. 3) Value Chain: visualizza il processo di trasformazione da risorsa grezza a prodotto di valore tramite un diagramma di flusso. 4) Opportunity Areas & SWOT: analizza i settori di intervento proposti con un radar chart e una SWOT analysis. 5) Call to Action: conclude con un invito a "investire" nel progetto. Questa struttura trasforma il report narrativo in un'analisi di business convincente. -->
-    <!-- Visualization & Content Choices: Percezione Mercato -> Goal: Inform -> Viz: Donut Chart (Chart.js) -> Justification: Mostra chiaramente la proporzione del problema/opportunità. | Asset Esperienza -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Justification: Compara in modo efficace la "quantità" di risorsa disponibile per settore. | Processo di Valore -> Goal: Organize -> Viz: Flowchart (HTML/CSS) -> Justification: Spiega il modello operativo in modo semplice e visivo. | Aree di Impatto -> Goal: Compare -> Viz: Radar Chart (Chart.js) -> Justification: Offre una comparazione multi-variata immediata delle opportunità. | Analisi Strategica -> Goal: Organize -> Viz: SWOT Grid (HTML/CSS) -> Justification: Fornisce un framework di business classico per valutare l'iniziativa. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
-        @media (min-width: 768px) { .chart-container { height: 350px; max-height: 450px; } }
-        .stat-card { background: #ffffff; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05); padding: 2rem; }
-        .flow-arrow { color: #9ca3af; font-weight: bold; font-size: 2rem; align-self: center; margin: 0 1rem; }
-        .swot-card { padding: 1.5rem; border-radius: 0.5rem; }
+        /* Stili personalizzati per abbinare il design */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #E5E7EB; /* Grigio di sfondo come nello screenshot */
+        }
+        .font-serif {
+            font-family: 'Lora', serif;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: auto;
+            background-color: #F3F4F6;
+        }
+        .header-nav {
+            background-color: #4A5568; /* Un blu/grigio scuro per l'header */
+        }
+        .title-bar {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #D1D5DB;
+        }
+        .post-card, .widget {
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+        }
+        .comment {
+            border-top: 1px solid #E5E7EB;
+        }
     </style>
 </head>
-<body class="text-gray-700">
+<body class="bg-gray-200">
 
-    <header class="text-center py-12 px-4 bg-white">
-        <h1 class="text-4xl md:text-5xl font-black text-blue-900 mb-3">IL MERCATO DELL'ESPERIENZA</h1>
-        <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">Un'analisi interattiva sulle tendenze di mercato e il potenziale inutilizzato della Senior Economy.</p>
-    </header>
-
-    <main class="container mx-auto px-6 py-12">
-
-        <section id="market-overview" class="mb-20">
-            <h2 class="text-3xl font-bold text-center mb-10 text-blue-800">1. Market Overview: Il Paradosso della Longevità</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div class="stat-card text-center">
-                    <p class="text-7xl font-black text-amber-500">+15 ANNI</p>
-                    <p class="text-xl font-semibold mt-2 text-gray-800">Aumento Aspettativa di Vita (1960-2020)</p>
-                    <p class="mt-4 text-gray-600">La longevità ha creato un nuovo, vasto segmento di popolazione con decenni di vita post-lavorativa. Questo rappresenta una sfida sociale ma anche un'enorme opportunità di mercato non sfruttata.</p>
-                </div>
-                <div class="stat-card">
-                    <h3 class="text-xl font-bold text-center mb-4 text-gray-800">Analisi della Percezione Attuale</h3>
-                    <div class="chart-container">
-                        <canvas id="perceptionChart"></canvas>
-                    </div>
-                    <p class="mt-4 text-center text-sm text-gray-500">Analisi della percezione sociale del ruolo del senior. L'area "Costo Sociale" domina, indicando un'inefficienza di mercato e un'opportunità di riposizionamento.</p>
+    <div class="main-container shadow-lg">
+        <!-- Header di Navigazione Superiore -->
+        <header class="header-nav text-white text-sm">
+            <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+                <nav>
+                    <ul class="flex space-x-4">
+                        <li><a href="#" class="hover:text-gray-300">HOME</a></li>
+                        <li><a href="#" class="hover:text-gray-300">ABOUT / TOP POSTS</a></li>
+                        <li><a href="#" class="hover:text-gray-300">ARCHIVES</a></li>
+                        <li><a href="#" class="hover:text-gray-300">TOP POSTS</a></li>
+                    </ul>
+                </nav>
+                <div class="flex space-x-4">
+                    <a href="#" class="hover:text-gray-300">RSS FEED</a>
+                    <a href="#" class="hover:text-gray-300">COMMENTS FEED</a>
                 </div>
             </div>
-        </section>
+        </header>
 
-        <section id="asset-analysis" class="mb-20">
-            <h2 class="text-3xl font-bold text-center mb-10 text-blue-800">2. Asset Analysis: Il Capitale Umano Inespresso</h2>
-            <div class="stat-card">
-                 <h3 class="text-xl font-bold text-center mb-4 text-gray-800">Anni di Esperienza Cumulata per Settore (Stima)</h3>
-                 <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Il vero asset di questo mercato è il capitale di esperienza accumulato. La nostra analisi stima la distribuzione di questa risorsa inespressa, pronta per essere reimmessa nel sistema economico.</p>
-                <div class="chart-container" style="max-width: 800px; height: 400px;">
-                    <canvas id="experienceChart"></canvas>
-                </div>
-            </div>
-        </section>
+        <!-- Barra del Titolo Principale -->
+        <div class="title-bar p-6 text-center">
+            <h1 class="text-5xl font-bold text-gray-800 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mr-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18M5.468 18.253L12 12m6.532-6.253L12 12" />
+                    <path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"></path>
+                </svg>
+                Slate Star Codex
+            </h1>
+        </div>
 
-        <section id="value-chain" class="mb-20">
-            <h2 class="text-3xl font-bold text-center mb-10 text-blue-800">3. Value Chain: Il Processo di Trasformazione</h2>
-            <p class="text-center max-w-3xl mx-auto mb-10 text-gray-600">Per capitalizzare l'asset "esperienza", proponiamo un processo di valore che trasforma il potenziale individuale in soluzioni di mercato concrete, accessibili e scalabili.</p>
-            <div class="bg-white p-8 rounded-lg shadow-md">
-                <div class="flex flex-col md:flex-row justify-center items-stretch text-center">
-                    <div class="flex-1 p-4 bg-gray-50 rounded-lg">
-                        <p class="text-3xl">👤</p>
-                        <h4 class="font-bold text-blue-900">Senior come Risorsa</h4>
-                        <p class="text-sm">Individuazione del capitale di esperienza.</p>
-                    </div>
-                    <div class="flow-arrow hidden md:flex">➔</div>
-                    <div class="flex-1 p-4 bg-gray-50 rounded-lg mt-4 md:mt-0">
-                        <p class="text-3xl">🗂️</p>
-                        <h4 class="font-bold text-blue-900">Piattaforma Repository</h4>
-                        <p class="text-sm">Aggregazione e categorizzazione della conoscenza.</p>
-                    </div>
-                    <div class="flow-arrow hidden md:flex">➔</div>
-                    <div class="flex-1 p-4 bg-gray-50 rounded-lg mt-4 md:mt-0">
-                        <p class="text-3xl">🤖</p>
-                        <h4 class="font-bold text-blue-900">Strumenti e Collaborazione</h4>
-                        <p class="text-sm">Valorizzazione tramite AI, software e mentorship.</p>
-                    </div>
-                    <div class="flow-arrow hidden md:flex">➔</div>
-                    <div class="flex-1 p-4 bg-gray-50 rounded-lg mt-4 md:mt-0">
-                        <p class="text-3xl">🚀</p>
-                        <h4 class="font-bold text-blue-900">Mercato (Giovani e PMI)</h4>
-                        <p class="text-sm">Distribuzione di soluzioni e valore economico.</p>
-                    </div>
+        <!-- Contenuto Principale a 3 Colonne -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+
+            <!-- Colonna Sinistra: Blogroll -->
+            <aside class="col-span-1">
+                <div class="widget p-4 rounded-lg">
+                    <h3 class="font-bold text-lg border-b pb-2 mb-2">BLOGROLL</h3>
+                    <h4 class="font-semibold mt-4">Economics</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">Attir Kal</a></li>
+                        <li><a href="#" class="hover:underline">Bryan Caplan</a></li>
+                        <li><a href="#" class="hover:underline">David Friedman</a></li>
+                        <li><a href="#" class="hover:underline">Pseudonymous</a></li>
+                        <li><a href="#" class="hover:underline">Scott Sumner</a></li>
+                        <li><a href="#" class="hover:underline">Tyler Cowen</a></li>
+                    </ul>
+                     <h4 class="font-semibold mt-4">Effective Altruism</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">80000 Hours Blog</a></li>
+                        <li><a href="#" class="hover:underline">Effective Altruism Forum</a></li>
+                        <li><a href="#" class="hover:underline">GiveWell Blog</a></li>
+                    </ul>
+                    <h4 class="font-semibold mt-4">Rationality</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">Alyssa Vance</a></li>
+                        <li><a href="#" class="hover:underline">Benmitrde</a></li>
+                        <li><a href="#" class="hover:underline">Elizabeth Van Nostrand</a></li>
+                        <li><a href="#" class="hover:underline">Gwern Branwen</a></li>
+                        <li><a href="#" class="hover:underline">Jacob Falkovich</a></li>
+                        <li><a href="#" class="hover:underline">Jell Kaufman</a></li>
+                    </ul>
                 </div>
-            </div>
-        </section>
-        
-        <section id="opportunities" class="mb-20">
-            <h2 class="text-3xl font-bold text-center mb-10 text-blue-800">4. Analisi Strategica: Opportunità e Rischi</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                <div class="lg:col-span-2 stat-card">
-                    <h3 class="text-xl font-bold text-center mb-4 text-gray-800">Potenziale di Impatto per Area</h3>
-                    <div class="chart-container">
-                        <canvas id="radarChart"></canvas>
-                    </div>
-                     <p class="mt-4 text-center text-sm text-gray-500">Analisi delle aree di intervento con il più alto potenziale di impatto e di monetizzazione basato sull'esperienza disponibile.</p>
-                </div>
-                <div class="lg:col-span-3">
-                     <h3 class="text-xl font-bold text-center mb-4 text-gray-800">SWOT Analysis dell'Iniziativa</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="swot-card bg-green-100 border-l-4 border-green-500">
-                            <h4 class="font-bold text-green-800">Strengths (Punti di Forza)</h4>
-                            <ul class="list-disc list-inside text-sm text-green-700 mt-2"><li>Asset di esperienza vasto e a basso costo</li><li>Alta credibilità e autorevolezza</li><li>Forte motivazione intrinseca (scopo)</li></ul>
-                        </div>
-                        <div class="swot-card bg-red-100 border-l-4 border-red-500">
-                             <h4 class="font-bold text-red-800">Weaknesses (Punti di Debolezza)</h4>
-                            <ul class="list-disc list-inside text-sm text-red-700 mt-2"><li>Potenziale divario digitale</li><li>Frammentazione delle competenze</li><li>Resistenza al cambiamento</li></ul>
-                        </div>
-                        <div class="swot-card bg-sky-100 border-l-4 border-sky-500">
-                            <h4 class="font-bold text-sky-800">Opportunities (Opportunità)</h4>
-                            <ul class="list-disc list-inside text-sm text-sky-700 mt-2"><li>Domanda crescente di mentorship</li><li>Modelli di lavoro flessibili (gig economy)</li><li>Tecnologia AI per la scalabilità</li></ul>
-                        </div>
-                        <div class="swot-card bg-yellow-100 border-l-4 border-yellow-500">
-                             <h4 class="font-bold text-yellow-800">Threats (Minacce)</h4>
-                            <ul class="list-disc list-inside text-sm text-yellow-700 mt-2"><li>Preconcetti sociali sull'età</li><li>Concorrenza di piattaforme di formazione online</li><li>Complessità normative</li></ul>
-                        </div>
+            </aside>
+
+            <!-- Colonna Centrale: Post -->
+            <main class="col-span-1 md:col-span-2 space-y-6">
+                <!-- Contenuto Homepage -->
+                <div class="post-card p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800">Benvenuti su Slate Star Codex</h2>
+                    <div class="font-serif text-gray-700 mt-4 space-y-4">
+                        <p>Un blog su psichiatria, scienza, storia, politica e tutto ciò che si trova in mezzo.</p>
+                        <p>Esplora i post recenti qui sotto o usa la navigazione per trovare gli archivi e i saggi più popolari. Il pensiero chiaro è il nostro obiettivo primario. Speriamo che tu possa trovare qualcosa che sfidi le tue prospettive e affini il tuo modo di pensare.</p>
                     </div>
                 </div>
-            </div>
-        </section>
-        
-    </main>
-    
-    <footer class="bg-blue-900 text-white text-center p-10">
-        <h2 class="text-3xl font-bold mb-4">È il Momento di Investire nell'Esperienza.</h2>
-        <p class="max-w-2xl mx-auto mb-6 opacity-80">Il progetto "Anziano? No, Risorsa!" non è un'iniziativa sociale, ma una strategia di mercato per sbloccare il valore di un asset dormiente. È il momento di attivare l'esercito delle risorse.</p>
-        <button class="bg-amber-500 text-blue-900 font-bold py-3 px-8 rounded-full hover:bg-amber-400 transition-colors text-lg">Scopri Come Partecipare</button>
-    </footer>
 
-    <script>
-        const wrapLabel = (label) => {
-            const maxLen = 16;
-            if (label.length <= maxLen) return label;
-            const words = label.split(' ');
-            let lines = [];
-            let currentLine = '';
-            for (const word of words) {
-                if ((currentLine + ' ' + word).length > maxLen) {
-                    lines.push(currentLine);
-                    currentLine = word;
-                } else {
-                    currentLine += (currentLine ? ' ' : '') + word;
-                }
-            }
-            lines.push(currentLine);
-            return lines;
-        };
+                <!-- Primo Post -->
+                <article class="post-card p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800"><a href="#" class="hover:text-blue-700">INTRODUCING ASTRAL CODEX TEN</a></h2>
+                    <p class="text-xs text-gray-500 mt-1">POSTED ON JANUARY 21, 2021 BY SCOTT ALEXANDER</p>
+                    <div class="font-serif text-gray-700 mt-4 space-y-4">
+                        <p>Thanks for bearing with me the past few months. My new blog is at <a href="https://astralcodexten.substack.com/" class="text-blue-700 hover:underline">https://astralcodexten.substack.com/</a>. I’ll try to have a less unwieldy domain name working soon.</p>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">POSTED IN UNCATEGORIZED | <a href="#" class="text-blue-700">11 COMMENTS</a></p>
+                </article>
 
-        const tooltipTitleCallback = (tooltipItems) => {
-            const item = tooltipItems[0];
-            let label = item.chart.data.labels[item.dataIndex];
-            if (Array.isArray(label)) {
-                return label.join(' ');
-            }
-            return label;
-        };
+                <!-- Secondo Post -->
+                <article class="post-card p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800"><a href="#" class="hover:text-blue-700">UPDATE ON MY SITUATION</a></h2>
+                    <p class="text-xs text-gray-500 mt-1">POSTED ON SEPTEMBER 11, 2020 BY SCOTT ALEXANDER</p>
+                    <div class="font-serif text-gray-700 mt-4 space-y-4">
+                        <p>It’s been two and a half months since I deleted the blog, so I owe all of you an update on <a href="#" class="text-blue-700 hover:underline">recent events</a>.</p>
+                        <p>I haven’t heard anything from the New York Times one way or the other. Since nothing has been published, I’d assume they dropped the article, except that they approached an acquaintance for another interview last month. Overall I’m confused.</p>
+                    </div>
+                </article>
+                
+                <!-- Sezione Commenti -->
+                <div class="post-card p-6 rounded-lg" id="comments">
+                    <h3 class="text-xl font-bold mb-4">82 RESPONSES TO TOP POSTS</h3>
+                    <div class="space-y-4">
+                        <!-- Commento 1 -->
+                        <div class="comment flex space-x-3 pt-4">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="font-semibold">SocioDude <span class="text-xs font-normal text-gray-500">says: August 15, 2014 at 5:03 pm</span></p>
+                                <p class="text-sm mt-1">You might be interested to know that the "Control Group is out of Control" link is incorrect.</p>
+                                <a href="#" class="text-xs text-blue-700 hover:underline">Log in to Reply</a>
+                            </div>
+                        </div>
+                         <!-- Commento 2 -->
+                        <div class="comment flex space-x-3 pt-4">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="font-semibold">destraci <span class="text-xs font-normal text-gray-500">says: August 18, 2014 at 6:43 pm</span></p>
+                                <p class="text-sm mt-1">You might even say that the "Control Group is out of Control" link is... out of control.</p>
+                                 <a href="#" class="text-xs text-blue-700 hover:underline">Log in to Reply</a>
+                            </div>
+                        </div>
+                         <!-- Commento 3 -->
+                        <div class="comment flex space-x-3 pt-4">
+                             <div class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="font-semibold">Zargon <span class="text-xs font-normal text-gray-500">says: October 30, 2014 at 11:23 am</span></p>
+                                <p class="text-sm mt-1">Bordersx link is malformed. Feel free to delete this if you like after fixing.</p>
+                                 <a href="#" class="text-xs text-blue-700 hover:underline">Log in to Reply</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        const defaultPlugins = {
-            legend: {
-                position: 'bottom',
-                labels: { color: '#4b5563' }
-            },
-            tooltip: {
-                callbacks: { title: tooltipTitleCallback }
-            }
-        };
+                <!-- Form per Aggiungere un Commento -->
+                <div class="post-card p-6 rounded-lg" id="add-comment">
+                    <h3 class="text-xl font-bold mb-4">Leave a Reply</h3>
+                    <p class="text-sm mb-4">Your email address will not be published. You must <a href="#" class="text-blue-600 hover:underline">log in</a> to post a comment.</p>
+                    <form action="#" method="POST">
+                        <div class="mb-4">
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" id="name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div class="mb-4">
+                             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                         <div class="mb-4">
+                            <label for="message" class="block text-sm font-medium text-gray-700">Comment</label>
+                            <textarea id="message" name="message" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Post Comment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
 
-        new Chart(document.getElementById('perceptionChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Costo Sociale Percepito', 'Risorsa Attiva Potenziale'],
-                datasets: [{
-                    data: [70, 30],
-                    backgroundColor: ['#9ca3af', '#42A5F5'],
-                    borderColor: '#f8fafc',
-                    borderWidth: 4
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: defaultPlugins
-            }
-        });
+            <!-- Colonna Destra: Meta & Widget -->
+            <aside class="col-span-1 space-y-6">
+                <div class="widget p-4 rounded-lg">
+                    <h3 class="font-bold text-lg border-b pb-2 mb-2">META</h3>
+                     <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">Register</a></li>
+                        <li><a href="#" class="hover:underline">Log in</a></li>
+                        <li><a href="#" class="hover:underline">Entries feed</a></li>
+                        <li><a href="#" class="hover:underline">Comments feed</a></li>
+                        <li><a href="#" class="hover:underline">WordPress.org</a></li>
+                    </ul>
+                </div>
+                <div class="widget p-6 rounded-lg text-center text-white" style="background-color: #2D3748;">
+                    <h3 class="text-lg font-bold">CAN YOU</h3>
+                    <p class="text-xs my-2">contribute to optimal aggregation of well-calibrated probability estimates for future events, i.e.</p>
+                    <a href="#" class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-2xl mt-4">
+                        PREDICT THE FUTURE?
+                    </a>
+                </div>
+                <div class="widget p-4 rounded-lg">
+                     <img src="https://placehold.co/300x150/F9D4AB/333333?text=MEALSQUARES" alt="Immagine di MealSquares" class="w-full rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/300x150';">
+                     <h4 class="font-bold mt-2 text-center">MEALSQUARES</h4>
+                     <p class="text-xs text-center text-gray-600">MAGICAL RATIONAL OPTIMIZED INTERNET FOOD</p>
+                </div>
+                 <div class="widget p-4 rounded-lg">
+                    <a href="#" class="block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-center">
+                        ❤️ Become a patron
+                    </a>
+                     <p class="text-xs text-gray-600 mt-2">Support Slate Star Codex on <a href="#" class="text-blue-700">Patreon</a>. I have a day job and SSC gets free hosting, so don't feel pressurized to contribute. But extra cash helps pay for contest prizes, meetup expenses, and me spending extra time blogging instead of working.</p>
+                </div>
+            </aside>
 
-        new Chart(document.getElementById('experienceChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Commerciale & Vendite', 'Tecnico & Manifatturiero', 'Amministrazione & Legale', 'Artigianato & Creatività'],
-                datasets: [{
-                    label: 'Anni di Esperienza Cumulata (Migliaia)',
-                    data: [450, 380, 520, 250],
-                    backgroundColor: '#42A5F5',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                     legend: { display: false },
-                     tooltip: { callbacks: { title: tooltipTitleCallback } }
-                },
-                scales: {
-                    y: { grid: { drawOnChartArea: false } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-        
-        new Chart(document.getElementById('radarChart').getContext('2d'), {
-            type: 'radar',
-            data: {
-                labels: ['Supporto AI', 'Gare Pubbliche', 'Mentorship Commerciale', ['Hobby', 'Creativi'], 'Gestione Progetti'],
-                datasets: [{
-                    label: 'Potenziale di Impatto',
-                    data: [8, 7, 9, 6, 8],
-                    fill: true,
-                    backgroundColor: 'rgba(66, 165, 245, 0.2)',
-                    borderColor: '#42A5F5',
-                    pointBackgroundColor: '#42A5F5',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#42A5F5'
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                     legend: { display: false },
-                     tooltip: { callbacks: { title: tooltipTitleCallback } }
-                },
-                scales: {
-                    r: {
-                        angleLines: { color: '#e5e7eb' },
-                        grid: { color: '#e5e7eb' },
-                        pointLabels: { font: { size: 12 }, color: '#374151' },
-                        ticks: { backdropColor: '#f8fafc', color: '#6b7280' }
-                    }
-                }
-            }
-        });
-    </script>
+        </div>
+    </div>
+
 </body>
 </html>
