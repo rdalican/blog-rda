@@ -1,41 +1,112 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }} - Blog RdA</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Blog RdA</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/blog">Blog</a></li>
-                <li><a href="/about">Chi Sono</a></li>
-                <li><a href="/contact">Contatti</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <article class="blog-post">
-            <header class="post-header">
-                <h2>{{ post.title }}</h2>
-                <div class="post-meta">
-                    <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
-                </div>
-            </header>
-            <div class="post-content">
-                {{ post.content | safe }}
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <article class="bg-white p-6 md:p-8 rounded-lg shadow-lg">
+        <header class="mb-8 text-center border-b pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">{{ post.title }}</h1>
+            <div class="text-gray-500 mt-2">
+                Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
             </div>
-            <footer class="post-footer">
-                <a href="/blog" class="back-to-blog">← Torna al Blog</a>
-            </footer>
-        </article>
-    </main>
-    <footer>
-        <p>&copy; 2024 Blog RdA. Tutti i diritti riservati.</p>
-    </footer>
-</body>
-</html>
+        </header>
+        
+        <div class="prose max-w-none">
+            {{ post.content | safe }}
+        </div>
+
+    </article>
+
+    <div class="mt-8 text-center">
+        <a href="{{ url_for('blog') }}" class="text-blue-600 hover:underline">← Torna al Blog</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Questo script riesegue gli script necessari per la pagina del post,
+// come l'inizializzazione dei grafici o altre interattività.
+document.addEventListener('DOMContentLoaded', () => {
+
+    const jobMarketCtx = document.getElementById('jobMarketChart')?.getContext('2d');
+    if (jobMarketCtx) {
+        new Chart(jobMarketCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Posti Sostituiti', 'Posti Creati'],
+                datasets: [{
+                    label: 'Milioni di Posti di Lavoro (Stima WEF)',
+                    data: [85, 97],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.6)', // red-500
+                        'rgba(34, 197, 94, 0.6)' // green-500
+                    ],
+                    borderColor: [
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(34, 197, 94, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    const skillDescriptions = {
+        critico: {
+            title: 'Pensiero Critico e Problem-Solving',
+            text: "L'IA fornisce dati, ma il discernimento umano è insostituibile."
+        },
+        creativita: {
+            title: 'Creatività e Innovazione',
+            text: "La vera innovazione nasce dalla creatività umana."
+        },
+        agilita: {
+            title: 'Agilità di Apprendimento',
+            text: "La capacità di imparare, de-imparare e ri-imparare rapidamente è la competenza fondamentale."
+        },
+        empatia: {
+            title: 'Empatia e Intelligenza Emotiva',
+            text: 'Più la tecnologia avanza, più le abilità umane diventano preziose.'
+        },
+        prompt: {
+            title: 'Prompt Engineering',
+            text: "L'arte e la scienza di formulare le giuste domande e istruzioni per guidare i modelli di IA generativa."
+        }
+    };
+
+    const skillCards = document.querySelectorAll('.skill-card');
+    const skillDescriptionContainer = document.getElementById('skill-description');
+
+    skillCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const skillKey = card.dataset.skill;
+            skillCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            const skillInfo = skillDescriptions[skillKey];
+            if (skillDescriptionContainer && skillInfo) {
+                skillDescriptionContainer.innerHTML = `
+                    <h4 class="text-xl font-bold mb-2 text-blue-700">${skillInfo.title}</h4>
+                    <p class="text-gray-700">${skillInfo.text}</p>
+                `;
+            }
+        });
+    });
+    
+    if (skillCards.length > 0) {
+        skillCards[0].click();
+    }
+});
+</script>
+{% endblock %}

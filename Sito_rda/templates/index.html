@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slate Star Codex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Stili personalizzati per abbinare il design */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #E5E7EB; /* Grigio di sfondo come nello screenshot */
+        }
+        .font-serif {
+            font-family: 'Lora', serif;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: auto;
+            background-color: #F3F4F6;
+        }
+        .header-nav {
+            background-color: #4A5568; /* Un blu/grigio scuro per l'header */
+        }
+        .title-bar {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #D1D5DB;
+        }
+        .post-card, .widget {
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+        }
+        .comment {
+            border-top: 1px solid #E5E7EB;
+        }
+    </style>
+</head>
+<body class="bg-gray-200">
+
+    <div class="main-container shadow-lg">
+        <!-- Header di Navigazione Superiore -->
+        <header class="header-nav text-white text-sm">
+            <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+                <nav>
+                    <ul class="flex space-x-4">
+                        <li><a href="#" class="hover:text-gray-300">HOME</a></li>
+                        <li><a href="#" class="hover:text-gray-300">ABOUT / TOP POSTS</a></li>
+                        <li><a href="#" class="hover:text-gray-300">ARCHIVES</a></li>
+                        <li><a href="#" class="hover:text-gray-300">TOP POSTS</a></li>
+                    </ul>
+                </nav>
+                <div class="flex space-x-4">
+                    <a href="#" class="hover:text-gray-300">RSS FEED</a>
+                    <a href="#" class="hover:text-gray-300">COMMENTS FEED</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Barra del Titolo Principale -->
+        <div class="title-bar p-6 text-center">
+            <h1 class="text-5xl font-bold text-gray-800 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mr-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18M5.468 18.253L12 12m6.532-6.253L12 12" />
+                    <path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"></path>
+                </svg>
+                Slate Star Codex
+            </h1>
+        </div>
+
+        <!-- Contenuto Principale a 3 Colonne -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+
+            <!-- Colonna Sinistra: Blogroll -->
+            <aside class="col-span-1">
+                <div class="widget p-4 rounded-lg">
+                    <h3 class="font-bold text-lg border-b pb-2 mb-2">BLOGROLL</h3>
+                    <h4 class="font-semibold mt-4">Economics</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">Attir Kal</a></li>
+                        <li><a href="#" class="hover:underline">Bryan Caplan</a></li>
+                        <li><a href="#" class="hover:underline">David Friedman</a></li>
+                        <li><a href="#" class="hover:underline">Pseudonymous</a></li>
+                        <li><a href="#" class="hover:underline">Scott Sumner</a></li>
+                        <li><a href="#" class="hover:underline">Tyler Cowen</a></li>
+                    </ul>
+                     <h4 class="font-semibold mt-4">Effective Altruism</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">80000 Hours Blog</a></li>
+                        <li><a href="#" class="hover:underline">Effective Altruism Forum</a></li>
+                        <li><a href="#" class="hover:underline">GiveWell Blog</a></li>
+                    </ul>
+                    <h4 class="font-semibold mt-4">Rationality</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">Alyssa Vance</a></li>
+                        <li><a href="#" class="hover:underline">Benmitrde</a></li>
+                        <li><a href="#" class="hover:underline">Elizabeth Van Nostrand</a></li>
+                        <li><a href="#" class="hover:underline">Gwern Branwen</a></li>
+                        <li><a href="#" class="hover:underline">Jacob Falkovich</a></li>
+                        <li><a href="#" class="hover:underline">Jell Kaufman</a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Colonna Centrale: Post -->
+            <main class="col-span-1 md:col-span-2 space-y-6">
+                <!-- Contenuto Homepage -->
+                <div class="post-card p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800">Benvenuti su Slate Star Codex</h2>
+                    <div class="font-serif text-gray-700 mt-4 space-y-4">
+                        <p>Un blog su psichiatria, scienza, storia, politica e tutto ciò che si trova in mezzo.</p>
+                        <p>Esplora i post recenti qui sotto o usa la navigazione per trovare gli archivi e i saggi più popolari. Il pensiero chiaro è il nostro obiettivo primario. Speriamo che tu possa trovare qualcosa che sfidi le tue prospettive e affini il tuo modo di pensare.</p>
+                    </div>
+                </div>
+
+                <!-- Primo Post -->
+                <article class="post-card p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800"><a href="#" class="hover:text-blue-700">INTRODUCING ASTRAL CODEX TEN</a></h2>
+                    <p class="text-xs text-gray-500 mt-1">POSTED ON JANUARY 21, 2021 BY SCOTT ALEXANDER</p>
+                    <div class="font-serif text-gray-700 mt-4 space-y-4">
+                        <p>Thanks for bearing with me the past few months. My new blog is at <a href="https://astralcodexten.substack.com/" class="text-blue-700 hover:underline">https://astralcodexten.substack.com/</a>. I’ll try to have a less unwieldy domain name working soon.</p>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">POSTED IN UNCATEGORIZED | <a href="#" class="text-blue-700">11 COMMENTS</a></p>
+                </article>
+
+                <!-- Secondo Post -->
+                <article class="post-card p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800"><a href="#" class="hover:text-blue-700">UPDATE ON MY SITUATION</a></h2>
+                    <p class="text-xs text-gray-500 mt-1">POSTED ON SEPTEMBER 11, 2020 BY SCOTT ALEXANDER</p>
+                    <div class="font-serif text-gray-700 mt-4 space-y-4">
+                        <p>It’s been two and a half months since I deleted the blog, so I owe all of you an update on <a href="#" class="text-blue-700 hover:underline">recent events</a>.</p>
+                        <p>I haven’t heard anything from the New York Times one way or the other. Since nothing has been published, I’d assume they dropped the article, except that they approached an acquaintance for another interview last month. Overall I’m confused.</p>
+                    </div>
+                </article>
+                
+                <!-- Sezione Commenti -->
+                <div class="post-card p-6 rounded-lg" id="comments">
+                    <h3 class="text-xl font-bold mb-4">82 RESPONSES TO TOP POSTS</h3>
+                    <div class="space-y-4">
+                        <!-- Commento 1 -->
+                        <div class="comment flex space-x-3 pt-4">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="font-semibold">SocioDude <span class="text-xs font-normal text-gray-500">says: August 15, 2014 at 5:03 pm</span></p>
+                                <p class="text-sm mt-1">You might be interested to know that the "Control Group is out of Control" link is incorrect.</p>
+                                <a href="#" class="text-xs text-blue-700 hover:underline">Log in to Reply</a>
+                            </div>
+                        </div>
+                         <!-- Commento 2 -->
+                        <div class="comment flex space-x-3 pt-4">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="font-semibold">destraci <span class="text-xs font-normal text-gray-500">says: August 18, 2014 at 6:43 pm</span></p>
+                                <p class="text-sm mt-1">You might even say that the "Control Group is out of Control" link is... out of control.</p>
+                                 <a href="#" class="text-xs text-blue-700 hover:underline">Log in to Reply</a>
+                            </div>
+                        </div>
+                         <!-- Commento 3 -->
+                        <div class="comment flex space-x-3 pt-4">
+                             <div class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="font-semibold">Zargon <span class="text-xs font-normal text-gray-500">says: October 30, 2014 at 11:23 am</span></p>
+                                <p class="text-sm mt-1">Bordersx link is malformed. Feel free to delete this if you like after fixing.</p>
+                                 <a href="#" class="text-xs text-blue-700 hover:underline">Log in to Reply</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form per Aggiungere un Commento -->
+                <div class="post-card p-6 rounded-lg" id="add-comment">
+                    <h3 class="text-xl font-bold mb-4">Leave a Reply</h3>
+                    <p class="text-sm mb-4">Your email address will not be published. You must <a href="#" class="text-blue-600 hover:underline">log in</a> to post a comment.</p>
+                    <form action="#" method="POST">
+                        <div class="mb-4">
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" id="name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div class="mb-4">
+                             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                         <div class="mb-4">
+                            <label for="message" class="block text-sm font-medium text-gray-700">Comment</label>
+                            <textarea id="message" name="message" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Post Comment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+
+            <!-- Colonna Destra: Meta & Widget -->
+            <aside class="col-span-1 space-y-6">
+                <div class="widget p-4 rounded-lg">
+                    <h3 class="font-bold text-lg border-b pb-2 mb-2">META</h3>
+                     <ul class="list-disc list-inside text-sm space-y-1 text-blue-700">
+                        <li><a href="#" class="hover:underline">Register</a></li>
+                        <li><a href="#" class="hover:underline">Log in</a></li>
+                        <li><a href="#" class="hover:underline">Entries feed</a></li>
+                        <li><a href="#" class="hover:underline">Comments feed</a></li>
+                        <li><a href="#" class="hover:underline">WordPress.org</a></li>
+                    </ul>
+                </div>
+                <div class="widget p-6 rounded-lg text-center text-white" style="background-color: #2D3748;">
+                    <h3 class="text-lg font-bold">CAN YOU</h3>
+                    <p class="text-xs my-2">contribute to optimal aggregation of well-calibrated probability estimates for future events, i.e.</p>
+                    <a href="#" class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-2xl mt-4">
+                        PREDICT THE FUTURE?
+                    </a>
+                </div>
+                <div class="widget p-4 rounded-lg">
+                     <img src="https://placehold.co/300x150/F9D4AB/333333?text=MEALSQUARES" alt="Immagine di MealSquares" class="w-full rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/300x150';">
+                     <h4 class="font-bold mt-2 text-center">MEALSQUARES</h4>
+                     <p class="text-xs text-center text-gray-600">MAGICAL RATIONAL OPTIMIZED INTERNET FOOD</p>
+                </div>
+                 <div class="widget p-4 rounded-lg">
+                    <a href="#" class="block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-center">
+                        ❤️ Become a patron
+                    </a>
+                     <p class="text-xs text-gray-600 mt-2">Support Slate Star Codex on <a href="#" class="text-blue-700">Patreon</a>. I have a day job and SSC gets free hosting, so don't feel pressurized to contribute. But extra cash helps pay for contest prizes, meetup expenses, and me spending extra time blogging instead of working.</p>
+                </div>
+            </aside>
+
+        </div>
+    </div>
+
+</body>
+</html>

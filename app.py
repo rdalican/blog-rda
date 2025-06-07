@@ -1,6 +1,5 @@
 from flask import Flask, render_template, url_for, flash, redirect, request
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from notion_manager import NotionManager
 from flask_mail import Mail, Message
@@ -11,12 +10,6 @@ import os
 load_dotenv('Config_Email.env')
 
 app = Flask(__name__)
-# Modifica per Vercel: usa un database in memoria per l'ambiente di produzione
-if os.environ.get('VERCEL_ENV') == 'production':
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
-
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key_here')
 
 # Email configuration
@@ -28,7 +21,6 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 app.config['MAIL_RECIPIENT'] = os.environ.get('MAIL_RECIPIENT')
 
-db = SQLAlchemy(app)
 mail = Mail(app)
 
 try:
@@ -37,36 +29,6 @@ except Exception as e:
     print(f"Errore durante l'inizializzazione di Notion: {str(e)}")
     notion = None
 
-# Inizializza il database e aggiungi alcuni post di esempio se siamo in produzione
-def init_db():
-    with app.app_context():
-        db.create_all()
-        # Se siamo su Vercel e il database è vuoto, aggiungi alcuni post di esempio
-        if os.environ.get('VERCEL_ENV') == 'production' and not Post.query.first():
-            sample_posts = [
-                {
-                    'title': 'Benvenuto nel Blog',
-                    'content': 'Questo è un post di esempio creato automaticamente.'
-                },
-                {
-                    'title': 'Come Funziona',
-                    'content': 'Questo blog usa Flask, SQLite e Notion per gestire i commenti.'
-                }
-            ]
-            for post_data in sample_posts:
-                post = Post(title=post_data['title'], content=post_data['content'])
-                db.session.add(post)
-            db.session.commit()
-
-# Inizializza il database
-init_db()
-
-class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
 @app.template_filter('regex_replace')
 def regex_replace(s, find, replace=''):
     """A non-optimal implementation of a regex filter"""
@@ -74,7 +36,7 @@ def regex_replace(s, find, replace=''):
 
 @app.context_processor
 def inject_now():
-    return {'now': datetime.utcnow()}
+    return {'now': datetime.now(timezone.utc)}
 
 @app.route('/')
 def index():
@@ -82,16 +44,36 @@ def index():
 
 @app.route('/blog')
 def blog():
-    posts = Post.query.order_by(Post.created_at.desc()).all()
+    if notion is None:
+        flash('Configurazione Notion non disponibile. Contatta l\'amministratore.', 'error')
+        return render_template('blog.html', posts=[])
+    success, posts = notion.get_blog_posts()
+    if not success:
+        flash('Errore nel recupero dei post. Contatta l\'amministratore.', 'error')
+        return render_template('blog.html', posts=[])
     return render_template('blog.html', posts=posts)
 
-@app.route('/post/<int:post_id>')
+@app.route('/post/<string:post_id>')
 def post(post_id):
-    post = Post.query.get_or_404(post_id)
-    success, comments = notion.get_comments_for_post(str(post_id))
-    return render_template('post.html', post=post, comments=comments if success else [])
+    if notion is None:
+        flash('Configurazione Notion non disponibile. Contatta l\'amministratore.', 'error')
+        return redirect(url_for('blog'))
+    
+    # The post_id from the URL is now the Notion Page ID
+    success, post_data = notion.get_post_by_id(post_id)
+    
+    if not success:
+        flash('Post non trovato.', 'error')
+        return redirect(url_for('blog'))
+        
+    # We still need the custom slug for comments, so we retrieve it from the post data
+    custom_post_slug = post_data.get('post_id', post_id)
+    
+    success_comments, comments = notion.get_comments_for_post(custom_post_slug)
+    
+    return render_template('post.html', post=post_data, comments=comments if success_comments else [])
 
-@app.route('/add_comment/<int:post_id>', methods=['POST'])
+@app.route('/add_comment/<string:post_id>', methods=['POST'])
 def add_comment(post_id):
     if notion is None:
         flash('Configurazione Notion non disponibile. Contatta l\'amministratore.', 'error')
@@ -102,8 +84,11 @@ def add_comment(post_id):
     message = request.form.get('message')
     
     # Get the post title
-    post = Post.query.get_or_404(post_id)
-    post_title = post.title
+    success, post = notion.get_post_by_id(post_id)
+    if not success:
+        flash('Post non trovato.', 'error')
+        return redirect(url_for('blog'))
+    post_title = post['title']
 
     success, result = notion.add_comment(name, email, message, str(post_id))
 
@@ -182,6 +167,4 @@ Messaggio:
     return render_template('contact.html')
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)

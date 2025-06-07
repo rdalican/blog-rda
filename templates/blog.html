@@ -1,46 +1,36 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - RdA</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Blog RdA</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/blog">Blog</a></li>
-                <li><a href="/about">Chi Sono</a></li>
-                <li><a href="/contact">Contatti</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <h2>Articoli del Blog</h2>
-        <div class="blog-posts">
-            {% if posts %}
-                {% for post in posts %}
-                    <article class="post-card">
-                        <h3><a href="/blog/{{ post.slug }}">{{ post.title }}</a></h3>
-                        <div class="post-meta">
-                            <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
+{% extends "base.html" %}
+
+{% block title %}Blog{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-12">Dal Mio Blog</h1>
+
+    {% if posts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for post in posts %}
+                <article class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                    <div class="p-6 flex-grow">
+                        <h2 class="text-2xl font-bold mb-2">
+                            <a href="{{ url_for('post', post_id=post.id) }}" class="text-gray-900 hover:text-blue-600 transition duration-300">{{ post.title }}</a>
+                        </h2>
+                        <div class="text-gray-500 text-sm mb-4">
+                            Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
                         </div>
-                        <div class="post-excerpt">
-                            {{ post.content[:200] | safe }}...
+                        <div class="text-gray-700">
+                            {{ post.content | safe }}
                         </div>
-                        <a href="/blog/{{ post.slug }}" class="read-more">Leggi di più</a>
-                    </article>
-                {% endfor %}
-            {% else %}
-                <p>Nessun articolo disponibile al momento.</p>
-            {% endif %}
+                    </div>
+                    <div class="p-6 bg-gray-50">
+                        <a href="{{ url_for('post', post_id=post.id) }}" class="font-semibold text-blue-600 hover:text-blue-800 transition duration-300">Leggi di più →</a>
+                    </div>
+                </article>
+            {% endfor %}
         </div>
-    </main>
-    <footer>
-        <p>&copy; 2024 Blog RdA. Tutti i diritti riservati.</p>
-    </footer>
-</body>
-</html>
+    {% else %}
+        <div class="text-center py-16">
+            <p class="text-xl text-gray-600">Nessun articolo disponibile al momento. Torna presto!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

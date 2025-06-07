@@ -1,8 +1,6 @@
-from http.server import BaseHTTPRequestHandler
+from api.index import app
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write('Hello, Vercel is working!'.encode()) 
+if __name__ == '__main__':
+    print("Starting test server...")
+    print("Make sure NOTION_TOKEN and NOTION_DATABASE_ID are set in your environment")
+    app.run(port=3000, debug=True) 

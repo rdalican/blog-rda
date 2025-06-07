@@ -7,4 +7,5 @@ click==8.1.7
 itsdangerous==2.1.2
 notion-client==2.2.1
 python-dotenv==1.0.1
-markdown2==2.4.12 
+markdown2==2.4.12
+requests==2.31.0 
