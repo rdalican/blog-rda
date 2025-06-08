@@ -44,21 +44,21 @@ class NotionManager:
             # Test della connessione ai database
             print(f"Verifica accesso al database contatti: {self.contacts_db_id}")
             contacts_db = self.notion.databases.retrieve(self.contacts_db_id)
-            print("✅ Database contatti trovato!")
+            print("[OK] Database contatti trovato!")
             
             print(f"Verifica accesso al database commenti: {self.comments_db_id}")
             comments_db = self.notion.databases.retrieve(self.comments_db_id)
-            print("✅ Database commenti trovato!")
+            print("[OK] Database commenti trovato!")
 
             print(f"Verifica accesso al database posts: {self.posts_db_id}")
             if self.posts_db_id: # Verifica solo se posts_db_id è definito
                 posts_db = self.notion.databases.retrieve(self.posts_db_id)
-                print("✅ Database posts trovato!")
+                print("[OK] Database posts trovato!")
             else:
-                print("⚠️ Database posts non configurato specificamente (posts_db_id is None).")
+                print("[WARNING] Database posts non configurato specificamente (posts_db_id is None).")
             
         except Exception as e:
-            print(f"\n❌ Errore di connessione a Notion: {str(e)}")
+            print(f"\n[ERROR] Errore di connessione a Notion: {str(e)}")
             raise
 
     def add_contact(self, name, email, message, company=None):
@@ -81,16 +81,16 @@ class NotionManager:
                 parent={"database_id": self.contacts_db_id},
                 properties=new_page
             )
-            print(f"✅ Contatto aggiunto con successo: {name}")
+            print(f"[OK] Contatto aggiunto con successo: {name}")
             return True, response
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante l'aggiunta del contatto: {error_msg}")
+            print(f"[ERROR] Errore durante l'aggiunta del contatto: {error_msg}")
             return False, error_msg
 
-    def add_comment(self, name, email, message, post_id):
+    def add_comment(self, name, email, message, post_id, url=None, parent_id=None):
         """
-        Aggiunge un nuovo commento al database dei commenti
+        Aggiunge un nuovo commento al database, gestendo anche risposte e URL.
         """
         try:
             new_comment = {
@@ -98,20 +98,30 @@ class NotionManager:
                 "Email": {"email": email},
                 "Messaggio": {"rich_text": [{"text": {"content": message}}]},
                 "Post ID": {"rich_text": [{"text": {"content": post_id}}]},
-                "Data": {"date": {"start": datetime.utcnow().isoformat()}},
-                "Stato": {"select": {"name": "Nuovo"}}
+                "Data": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
+                "Stato": {"select": {"name": "Nuovo"}} # Tutti i commenti necessitano di moderazione
             }
+
+            if url:
+                # Assicurati che la proprietà "URL" esista nel tuo database dei commenti
+                new_comment["URL"] = {"url": url}
+            
+            if parent_id:
+                # Assicurati che la proprietà "Parent Comment" esista per le risposte
+                new_comment["Parent Comment"] = {"rich_text": [{"text": {"content": parent_id}}]}
 
             print(f"Tentativo di aggiunta commento per il post {post_id}")
             response = self.notion.pages.create(
                 parent={"database_id": self.comments_db_id},
                 properties=new_comment
             )
-            print(f"✅ Commento aggiunto con successo da: {name}")
+            print(f"[OK] Commento aggiunto con successo da: {name}. In attesa di moderazione.")
             return True, response
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante l'aggiunta del commento: {error_msg}")
+            print(f"[ERROR] Errore durante l'aggiunta del commento: {error_msg}")
+            if "URL" in error_msg or "Parent Comment" in error_msg:
+                print("[INFO]  Verifica che le proprietà 'URL' (tipo URL) e 'Parent Comment' (tipo Rich Text) esistano nel tuo database dei commenti in Notion.")
             return False, error_msg
 
     def get_blog_posts(self):
@@ -168,7 +178,7 @@ class NotionManager:
             
             return True, posts
         except Exception as e:
-            print(f"Errore nel recupero dei post: {str(e)}")
+            print(f"[ERROR] Errore nel recupero dei post: {str(e)}")
             return False, []
 
     def get_post_by_id(self, post_id):
@@ -234,7 +244,7 @@ class NotionManager:
             
             return True, post
         except Exception as e:
-            print(f"Errore nel recupero del post: {str(e)}")
+            print(f"[ERROR] Errore nel recupero del post: {str(e)}")
             return False, None
 
     def get_comments_for_post(self, post_id):
@@ -269,21 +279,37 @@ class NotionManager:
                 ]
             )
             
-            comments = []
+            comments_flat = []
             for page in response['results']:
                 props = page['properties']
-                comment = {
+                
+                parent_id_list = props.get("Parent Comment", {}).get("rich_text", [])
+                parent_id = parent_id_list[0].get("text", {}).get("content") if parent_id_list else None
+
+                comments_flat.append({
+                    'id': page['id'],
                     'name': props['Name']['title'][0]['text']['content'] if props['Name']['title'] else 'Anonimo',
                     'message': props['Messaggio']['rich_text'][0]['text']['content'] if props['Messaggio']['rich_text'] else '',
-                    'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00'))
-                }
-                comments.append(comment)
-                
-            print(f"✅ Recuperati {len(comments)} commenti")
-            return True, comments
+                    'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00')),
+                    'url': props.get('URL', {}).get('url'),
+                    'parent_id': parent_id,
+                    'children': []
+                })
+            
+            # Costruisci la struttura ad albero
+            comment_map = {c['id']: c for c in comments_flat}
+            nested_comments = []
+            for comment in comments_flat:
+                if comment['parent_id'] and comment['parent_id'] in comment_map:
+                    comment_map[comment['parent_id']]['children'].append(comment)
+                else:
+                    nested_comments.append(comment)
+
+            print(f"[OK] Recuperati {len(comments_flat)} commenti approvati per il post {post_id}")
+            return True, nested_comments
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante il recupero dei commenti: {error_msg}")
+            print(f"[ERROR] Errore durante il recupero dei commenti: {error_msg}")
             return False, error_msg
 
     def get_contacts(self):
@@ -309,11 +335,11 @@ class NotionManager:
                 }
                 contacts.append(contact)
             
-            print(f"✅ Recuperati {len(contacts)} contatti")
+            print(f"[OK] Recuperati {len(contacts)} contatti")
             return contacts
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante il recupero dei contatti: {error_msg}")
+            print(f"[ERROR] Errore durante il recupero dei contatti: {error_msg}")
             return []
             
     def get_all_comments(self):
@@ -331,20 +357,22 @@ class NotionManager:
             for page in response['results']:
                 props = page['properties']
                 comment = {
+                    'id': page['id'],
                     'name': props['Name']['title'][0]['text']['content'] if props['Name']['title'] else 'Anonimo',
                     'email': props['Email']['email'] if props['Email']['email'] else '',
                     'message': props['Messaggio']['rich_text'][0]['text']['content'] if props['Messaggio']['rich_text'] else '',
                     'post_id': props['Post ID']['rich_text'][0]['text']['content'] if props['Post ID']['rich_text'] else '',
                     'date': props['Data']['date']['start'] if props['Data']['date'] else '',
-                    'status': props['Stato']['select']['name'] if props['Stato']['select'] else 'Nuovo'
+                    'status': props['Stato']['select']['name'] if props['Stato']['select'] else 'Nuovo',
+                    'url': props.get('URL', {}).get('url')
                 }
                 comments.append(comment)
             
-            print(f"✅ Recuperati {len(comments)} commenti")
+            print(f"[OK] Recuperati {len(comments)} commenti")
             return comments
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante il recupero dei commenti: {error_msg}")
+            print(f"[ERROR] Errore durante il recupero dei commenti: {error_msg}")
             return []
 
     def create_blog_posts_database(self, parent_page_id, db_name="Articoli del Blog"):
@@ -381,14 +409,14 @@ class NotionManager:
             )
             
             new_db_id = response.get("id")
-            print(f"✅ Database '{db_name}' creato con successo! ID: {new_db_id}")
-            print(f"➡️  Aggiungi questa riga al tuo file Config_Notion.env: NOTION_POSTS_DB_ID={new_db_id}")
+            print(f"[OK] Database '{db_name}' creato con successo! ID: {new_db_id}")
+            print(f"-->  Aggiungi questa riga al tuo file Config_Notion.env: NOTION_POSTS_DB_ID={new_db_id}")
             return True, new_db_id
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante la creazione del database '{db_name}': {error_msg}")
+            print(f"[ERROR] Errore durante la creazione del database '{db_name}': {error_msg}")
             if "Could not find a page with an ID" in error_msg:
-                print("ℹ️  Assicurati che il Parent Page ID sia corretto e che l'integrazione Notion abbia accesso a quella pagina.")
+                print("[INFO]  Assicurati che il Parent Page ID sia corretto e che l'integrazione Notion abbia accesso a quella pagina.")
             return False, error_msg
 
     def add_blog_post(self, title, html_content, author="Team Blog",
@@ -467,14 +495,112 @@ class NotionManager:
                  print(f"Proprietà 'Post ID' aggiornata con il Page ID: {new_page_id}")
 
 
-            print(f"✅ Post '{title}' aggiunto con successo! Page ID: {new_page_id}")
+            print(f"[OK] Post '{title}' aggiunto con successo! Page ID: {new_page_id}")
             return True, new_page_id
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Errore durante l'aggiunta del post '{title}': {error_msg}")
+            print(f"[ERROR] Errore durante l'aggiunta del post '{title}': {error_msg}")
             # Potrebbe essere utile un debug più specifico per errori comuni
             if "Could not find property with name Titolo" in error_msg:
-                print("ℹ️  Verifica che il database dei post abbia una proprietà 'Titolo' di tipo Title.")
+                print("[INFO]  Verifica che il database dei post abbia una proprietà 'Titolo' di tipo Title.")
             if "Unsaved transactions" in error_msg: # Errore comune con blocchi malformati
-                 print("ℹ️  Possibile problema con la formattazione dei 'content_blocks'. Verifica la struttura.")
+                print("[INFO]  Possibile problema con la formattazione dei 'content_blocks'. Verifica la struttura.")
+            return False, error_msg
+
+    def get_comments_for_moderation(self):
+        """
+        Recupera tutti i commenti con stato 'Nuovo' o 'Segnalato' per la moderazione.
+        """
+        try:
+            print("Recupero commenti per la moderazione...")
+            response = self.notion.databases.query(
+                database_id=self.comments_db_id,
+                filter={
+                    "or": [
+                        {"property": "Stato", "select": {"equals": "Nuovo"}},
+                        {"property": "Stato", "select": {"equals": "Segnalato"}}
+                    ]
+                },
+                sorts=[{"property": "Data", "direction": "ascending"}]
+            )
+            
+            comments = []
+            for page in response['results']:
+                props = page['properties']
+                comments.append({
+                    'id': page['id'],
+                    'name': props['Name']['title'][0]['text']['content'] if props['Name']['title'] else 'Anonimo',
+                    'message': props['Messaggio']['rich_text'][0]['text']['content'] if props['Messaggio']['rich_text'] else '',
+                    'post_id': props['Post ID']['rich_text'][0]['text']['content'] if props['Post ID']['rich_text'] else '',
+                    'date': props['Data']['date']['start'],
+                    'status': props['Stato']['select']['name']
+                })
+            
+            print(f"[OK] Recuperati {len(comments)} commenti da moderare.")
+            return True, comments
+        except Exception as e:
+            print(f"[ERROR] Errore durante il recupero dei commenti per la moderazione: {str(e)}")
+            return False, []
+
+    def update_comment_status(self, comment_id, status, moderator_notes=None):
+        """
+        Aggiorna lo stato di un commento e opzionalmente aggiunge note di moderazione.
+        """
+        try:
+            print(f"Aggiornamento stato del commento {comment_id} a '{status}'")
+            properties_to_update = {
+                "Stato": {"select": {"name": status}}
+            }
+            
+            if moderator_notes:
+                # Assicurati che esista una proprietà "Note Moderatore" (Rich Text)
+                properties_to_update["Note Moderatore"] = {"rich_text": [{"text": {"content": moderator_notes}}]}
+
+            self.notion.pages.update(
+                page_id=comment_id,
+                properties=properties_to_update
+            )
+            print(f"[OK] Commento {comment_id} aggiornato con successo.")
+            return True, "Stato aggiornato"
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[ERROR] Errore durante l'aggiornamento dello stato del commento {comment_id}: {error_msg}")
+            if "Note Moderatore" in error_msg:
+                print("[INFO]  Verifica che la proprietà 'Note Moderatore' (tipo Rich Text) esista nel tuo database.")
+            return False, error_msg
+
+    def update_post_content(self, page_id, new_html_content):
+        """
+        Aggiorna il contenuto di un post esistente, sostituendo i vecchi blocchi di codice.
+        """
+        try:
+            # 1. Rimuovi tutti i blocchi esistenti dalla pagina
+            existing_blocks = self.notion.blocks.children.list(block_id=page_id)
+            for block in existing_blocks['results']:
+                self.notion.blocks.delete(block_id=block['id'])
+
+            # 2. Aggiungi i nuovi blocchi di contenuto HTML
+            content_child_blocks = []
+            chunk_size = 2000
+            for i in range(0, len(new_html_content), chunk_size):
+                chunk = new_html_content[i:i + chunk_size]
+                content_child_blocks.append({
+                    "object": "block",
+                    "type": "code",
+                    "code": {
+                        "rich_text": [{"type": "text", "text": {"content": chunk}}],
+                        "language": "html"
+                    }
+                })
+            
+            self.notion.blocks.children.append(
+                block_id=page_id,
+                children=content_child_blocks
+            )
+            
+            print(f"[OK] Contenuto del post {page_id} aggiornato con successo.")
+            return True, page_id
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[ERROR] Errore durante l'aggiornamento del contenuto del post {page_id}: {error_msg}")
             return False, error_msg

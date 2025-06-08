@@ -4,33 +4,38 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold text-center mb-12">Dal Mio Blog</h1>
-
-    {% if posts %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {% for post in posts %}
-                <article class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-                    <div class="p-6 flex-grow">
-                        <h2 class="text-2xl font-bold mb-2">
-                            <a href="{{ url_for('post', post_id=post.id) }}" class="text-gray-900 hover:text-blue-600 transition duration-300">{{ post.title }}</a>
-                        </h2>
-                        <div class="text-gray-500 text-sm mb-4">
-                            Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
-                        </div>
-                        <div class="text-gray-700">
-                            {{ post.content | safe }}
-                        </div>
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Dal Mio Blog</h1>
+                {% if posts %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {% for post in posts %}
+                            <article class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                                <div class="p-6 flex-grow">
+                                    <h2 class="text-2xl font-bold mb-2">
+                                        <a href="{{ url_for('post', post_id=post.id) }}" class="text-gray-900 hover:text-blue-600 transition duration-300">{{ post.title }}</a>
+                                    </h2>
+                                    <div class="text-gray-500 text-sm mb-4">
+                                        Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
+                                    </div>
+                                    <div class="text-gray-700">
+                                        {{ post.content | safe }}
+                                    </div>
+                                </div>
+                                <div class="p-6 bg-gray-50">
+                                    <a href="{{ url_for('post', post_id=post.id) }}" class="font-semibold text-blue-600 hover:text-blue-800 transition duration-300">Leggi di più →</a>
+                                </div>
+                            </article>
+                        {% endfor %}
                     </div>
-                    <div class="p-6 bg-gray-50">
-                        <a href="{{ url_for('post', post_id=post.id) }}" class="font-semibold text-blue-600 hover:text-blue-800 transition duration-300">Leggi di più →</a>
+                {% else %}
+                    <div class="text-center py-16">
+                        <p class="text-xl text-gray-600">Nessun articolo disponibile al momento. Torna presto!</p>
                     </div>
-                </article>
-            {% endfor %}
+                {% endif %}
+            </div>
         </div>
-    {% else %}
-        <div class="text-center py-16">
-            <p class="text-xl text-gray-600">Nessun articolo disponibile al momento. Torna presto!</p>
-        </div>
-    {% endif %}
+    </div>
 </div>
 {% endblock %}

@@ -137,7 +137,7 @@ def install_dependencies():
 def reload_webapp():
     """Reloads the web app to apply changes."""
     print("Reloading web app...")
-    url = RELOAD_URL.format(username=PYTHONANYWHERE_USERNAME, domain_name=DOMAIN_NAME)
+    url = WEBAPP_URL.format(username=PYTHONANYWHERE_USERNAME, domain_name=DOMAIN_NAME) + "reload/"
     response = requests.post(url, headers=get_headers())
     if response.status_code == 200:
         print("Web app reloaded successfully.")

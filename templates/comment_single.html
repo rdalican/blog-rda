@@ -1,0 +1,37 @@
+<div id="comment-{{ comment.id }}" class="comment bg-white p-4 rounded-lg shadow-sm {% if comment.parent_id %}ml-8 md:ml-12{% endif %}">
+    <div class="flex items-start">
+        <div class="flex-shrink-0 mr-4">
+            <!-- Placeholder for an avatar -->
+            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <span class="text-lg font-bold text-gray-500">{{ comment.name[0] }}</span>
+            </div>
+        </div>
+        <div class="flex-grow">
+            <div class="flex items-center justify-between">
+                <div>
+                    {% if comment.url %}
+                        <a href="{{ comment.url }}" target="_blank" rel="noopener nofollow" class="font-bold text-gray-800 hover:text-blue-600">{{ comment.name }}</a>
+                    {% else %}
+                        <span class="font-bold text-gray-800">{{ comment.name }}</span>
+                    {% endif %}
+                    <span class="text-sm text-gray-500 ml-2">{{ comment.date.strftime('%d %B %Y alle %H:%M') }}</span>
+                </div>
+                <button class="reply-btn text-sm font-medium text-blue-600 hover:underline" data-comment-id="{{ comment.id }}" data-comment-author="{{ comment.name }}">
+                    Rispondi
+                </button>
+            </div>
+            <div class="prose prose-sm max-w-none mt-2 text-gray-700">
+                {{ comment.message|safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Nested Comments -->
+    {% if comment.children %}
+        <div class="children mt-4 space-y-4">
+            {% for child in comment.children %}
+                {% include 'comment_single.html' with comment=child %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

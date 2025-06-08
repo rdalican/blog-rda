@@ -4,22 +4,32 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <article class="bg-white p-6 md:p-8 rounded-lg shadow-lg">
-        <header class="mb-8 text-center border-b pb-4">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">{{ post.title }}</h1>
-            <div class="text-gray-500 mt-2">
-                Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-8">
+                <article>
+                    <header class="mb-8 text-center border-b pb-4">
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">{{ post.title }}</h1>
+                        <div class="text-gray-500 mt-2">
+                            Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
+                        </div>
+                    </header>
+                    
+                    <div class="prose max-w-none">
+                        {{ post.content | safe }}
+                    </div>
+            
+                </article>
+            
+                <hr class="my-12 border-gray-200">
+            
+                {% include 'comments.html' %}
+            
+                <div class="mt-12 text-center">
+                    <a href="{{ url_for('blog') }}" class="text-blue-600 hover:underline">← Torna al Blog</a>
+                </div>
             </div>
-        </header>
-        
-        <div class="prose max-w-none">
-            {{ post.content | safe }}
         </div>
-
-    </article>
-
-    <div class="mt-8 text-center">
-        <a href="{{ url_for('blog') }}" class="text-blue-600 hover:underline">← Torna al Blog</a>
     </div>
 </div>
 {% endblock %}

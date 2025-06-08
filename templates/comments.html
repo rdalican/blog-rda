@@ -1,0 +1,85 @@
+<section id="comment-section" class="mt-12">
+    <h3 class="text-2xl font-bold mb-6">Discussione (<span id="comment-count">{{ comments|length }}</span>)</h3>
+
+    <!-- Comment Form -->
+    <div id="comment-form-container" class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
+        <h4 class="text-lg font-semibold mb-4">Lascia un commento</h4>
+        <form id="comment-form" action="{{ url_for('add_comment_route', post_id=post.id) }}" method="POST">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Nome *</label>
+                    <input type="text" id="name" name="name" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
+                    <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="url" class="block text-sm font-medium text-gray-700">Sito Web (opzionale)</label>
+                <input type="url" id="url" name="url" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-4">
+                <label for="message" class="block text-sm font-medium text-gray-700">Messaggio *</label>
+                <textarea id="message" name="message" rows="4" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <input type="hidden" name="parent_id" id="parent_id" value="">
+            <div>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Invia Commento
+                </button>
+                <button type="button" id="cancel-reply-btn" class="hidden ml-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Annulla Risposta
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">Il tuo indirizzo email non sarà pubblicato. I commenti sono moderati.</p>
+        </form>
+    </div>
+
+    <!-- Comments List -->
+    <div id="comments-list" class="space-y-6">
+        {% if comments %}
+            {% for comment in comments %}
+                {% include 'comment_single.html' %}
+            {% endfor %}
+        {% else %}
+            <p id="no-comments" class="text-gray-500">Non ci sono ancora commenti. Sii il primo a dire la tua!</p>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const commentForm = document.getElementById('comment-form');
+    const parentIdInput = document.getElementById('parent_id');
+    const formContainer = document.getElementById('comment-form-container');
+    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+
+    document.querySelectorAll('.reply-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const commentAuthor = this.dataset.commentAuthor;
+            
+            parentIdInput.value = commentId;
+            
+            // Sposta il form sotto il commento a cui si risponde
+            const commentElement = document.getElementById('comment-' + commentId);
+            commentElement.insertAdjacentElement('afterend', formContainer);
+
+            // Aggiorna l'intestazione del form
+            formContainer.querySelector('h4').textContent = 'Rispondi a ' + commentAuthor;
+            cancelReplyBtn.classList.remove('hidden');
+        });
+    });
+
+    cancelReplyBtn.addEventListener('click', function() {
+        parentIdInput.value = '';
+        formContainer.querySelector('h4').textContent = 'Lascia un commento';
+        
+        // Riporta il form alla sua posizione originale
+        document.getElementById('comment-section').insertBefore(formContainer, document.getElementById('comments-list'));
+        
+        cancelReplyBtn.classList.add('hidden');
+    });
+});
+</script>
