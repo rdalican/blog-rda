@@ -14,7 +14,7 @@
                     {% else %}
                         <span class="font-bold text-gray-800">{{ comment.name }}</span>
                     {% endif %}
-                    {% if comment.date %}
+                    {% if comment.date and comment.date.strftime %}
                     <span class="text-sm text-gray-500 ml-2">{{ comment.date.strftime('%d %B %Y alle %H:%M') }}</span>
                     {% endif %}
                 </div>

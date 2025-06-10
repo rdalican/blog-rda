@@ -318,8 +318,8 @@ class NotionManager:
 
                 comments_flat.append({
                     'id': page['id'],
-                    'name': props['Name']['title'][0]['text']['content'] if props['Name']['title'] else 'Anonimo',
-                    'message': props['Messaggio']['rich_text'][0]['text']['content'] if props['Messaggio']['rich_text'] else '',
+                    'name': props.get('Name', {}).get('title', [{}])[0].get('text', {}).get('content', 'Anonimo'),
+                    'message': props.get('Messaggio', {}).get('rich_text', [{}])[0].get('text', {}).get('content', ''),
                     'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00')) if props.get('Data') and props['Data'].get('date') and props['Data']['date'].get('start') else None,
                     'url': props.get('URL', {}).get('url'),
                     'parent_id': parent_id,
