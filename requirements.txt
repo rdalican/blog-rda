@@ -1,0 +1,6 @@
+flask
+flask_mail
+python-dotenv
+notion-client
+markdown2
+markdown2

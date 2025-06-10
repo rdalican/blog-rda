@@ -1,159 +1,76 @@
-import requests
 import os
-import time
-import re
+import requests
 
-# --- Configuration ---
+# --- PythonAnywhere Configuration ---
+PYTHONANYWHERE_API_TOKEN = "b6b8f41c8765e0147529d3694e3208e08a3a10a6"
 PYTHONANYWHERE_USERNAME = "rdalican"
-PYTHONANYWHERE_TOKEN = "b6b8f41c8765e0147529d3694e3208e08a3a10a6"
-DOMAIN_NAME = "rdalican.pythonanywhere.com"
-PROJECT_PATH = os.path.abspath(".")
-REMOTE_PROJECT_NAME = "Blopg_RdA"
-FLASK_APP_FILE = "flask_app.py"
-PYTHON_VERSION = "python3.9"
+PYTHONANYWHERE_DOMAIN = f"{PYTHONANYWHERE_USERNAME}.pythonanywhere.com"
+
+# --- Project Configuration ---
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+VENV_NAME = "flask_blog_venv"
+VENV_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/.virtualenvs/{VENV_NAME}"
+WSGI_FILE_PATH = f"/var/www/{PYTHONANYWHERE_USERNAME}_pythonanywhere_com_wsgi.py"
 
 # --- API Endpoints ---
-BASE_URL = "https://www.pythonanywhere.com/api/v0/user/{username}/"
-WEBAPP_URL = BASE_URL + "webapps/{domain_name}/"
-RELOAD_URL = WEBAPP_URL + "reload/"
-STATIC_FILES_URL = BASE_URL + "files/path/home/{username}/{project_name}/"
+RELOAD_WEB_APP_URL = f"https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_DOMAIN}/reload/"
 
-def get_headers():
-    return {"Authorization": f"Token {PYTHONANYWHERE_TOKEN}"}
-
-def delete_existing_webapp():
-    """Deletes the existing web app."""
-    print(f"Deleting web app: {DOMAIN_NAME}...")
-    url = WEBAPP_URL.format(username=PYTHONANYWHERE_USERNAME, domain_name=DOMAIN_NAME)
-    response = requests.delete(url, headers=get_headers())
-    if response.status_code == 204:
-        print("Web app deleted successfully.")
-    elif response.status_code == 404:
-        print("Web app not found, skipping deletion.")
-    else:
-        print(f"Error deleting web app: {response.status_code} - {response.text}")
-        exit(1)
-
-def create_new_webapp():
-    """Creates a new web app."""
-    print(f"Creating new web app: {DOMAIN_NAME}...")
-    url = BASE_URL.format(username=PYTHONANYWHERE_USERNAME) + "webapps/"
-    data = {
-        "domain_name": DOMAIN_NAME,
-        "python_version": PYTHON_VERSION,
-    }
-    response = requests.post(url, headers=get_headers(), data=data)
-    if response.status_code == 201:
-        print("Web app created successfully.")
-    else:
-        print(f"Error creating web app: {response.status_code} - {response.text}")
-        exit(1)
-
-def upload_project_files():
-    """Uploads the project files to PythonAnywhere."""
-    print("Uploading project files...")
-    project_base_remote = f"/home/{PYTHONANYWHERE_USERNAME}/{REMOTE_PROJECT_NAME}"
-
-    # Exclude files and directories that shouldn't be uploaded
-    exclude_files = ['deploy_to_pythonanywhere.py']
-    exclude_dirs = ['.git', 'venv', '__pycache__', 'instance']
-
-    for root, dirs, files in os.walk(PROJECT_PATH, topdown=True):
-        dirs[:] = [d for d in dirs if d not in exclude_dirs]
-
-        for file in files:
-            if file in exclude_files:
-                continue
-
-            local_path = os.path.join(root, file)
-            relative_path = os.path.relpath(local_path, PROJECT_PATH)
-            remote_file_path = f"{project_base_remote}/{relative_path.replace(os.sep, '/')}"
-            url = f"https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/files/path{remote_file_path}"
-
-            while True:
-                with open(local_path, 'rb') as f:
-                    try:
-                        response = requests.post(url, headers=get_headers(), files={'content': f}, timeout=60)
-                    except requests.exceptions.RequestException as e:
-                        print(f"  - Network error uploading {relative_path}: {e}")
-                        time.sleep(10) # Wait before retrying on network error
-                        continue
-
-                if response.status_code in [200, 201]:
-                    status = "Overwrote" if response.status_code == 200 else "Uploaded"
-                    print(f"  - {status} {relative_path}")
-                    time.sleep(0.2)  # Small delay to be nice to the API
-                    break
-                elif response.status_code == 429:
-                    print(f"  - Throttled. Waiting and retrying {relative_path}...")
-                    time.sleep(10)  # Wait for 10 seconds if throttled
-                else:
-                    print(f"  - Error uploading {relative_path}: {response.status_code} - {response.text}")
-                    break
-
-
-def configure_wsgi_file():
-    """Configures the WSGI file for the Flask app."""
-    print("Configuring WSGI file...")
-    project_home = f'/home/{PYTHONANYWHERE_USERNAME}/{REMOTE_PROJECT_NAME}'
-    wsgi_content = f"""
-import sys
-path = '{project_home}'
-if path not in sys.path:
-    sys.path.insert(0, path)
-from {FLASK_APP_FILE.replace('.py', '')} import app as application
-"""
-    # The path to the WSGI file for your web app
-    wsgi_path = f"/var/www/{DOMAIN_NAME.replace('.', '_')}_wsgi.py"
-    url = f"https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/files/path{wsgi_path}"
-
-    response = requests.post(url, headers=get_headers(), files={'content': wsgi_content})
-
+def upload_file(file_path, remote_path):
+    """Uploads a file to PythonAnywhere."""
+    url = f"https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/files/path{remote_path}"
+    headers = {"Authorization": f"Token {PYTHONANYWHERE_API_TOKEN}"}
+    with open(file_path, 'rb') as f:
+        files = {'content': f}
+        response = requests.post(url, headers=headers, files=files)
     if response.status_code in [200, 201]:
-        print("WSGI file configured successfully.")
+        print(f"Successfully uploaded {os.path.basename(file_path)} to {remote_path}")
     else:
-        print(f"Error configuring WSGI file: {response.status_code} - {response.text}")
-        exit(1)
+        print(f"Failed to upload {os.path.basename(file_path)}. Status: {response.status_code}, Response: {response.text}")
 
+def main():
+    """Main deployment script."""
+    print("--- Starting Deployment to PythonAnywhere ---")
 
-def install_dependencies():
-    """Installs the required dependencies using pip."""
-    print("Installing dependencies from requirements.txt...")
-    requirements_path = f"/home/{PYTHONANYWHERE_USERNAME}/{REMOTE_PROJECT_NAME}/requirements.txt"
-    command = f"pip3.9 install --user -r {requirements_path}"
-    url = BASE_URL.format(username=PYTHONANYWHERE_USERNAME) + "consoles/"
-    response = requests.post(url, headers=get_headers(), data={"executable": "bash", "arguments": f"-c '{command}'"})
+    # --- List of files to upload ---
+    files_to_upload = [
+        "blog_app.py",
+        "notion_manager.py",
+        "requirements.txt",
+        "flask_app.py",
+        "Config_Email.env",
+        "Config_Notion.env"
+    ]
 
-    if response.status_code == 201:
-        print("  - Console created to install dependencies.")
-    elif "Console limit reached" in response.text:
-        print("  - Console limit reached. Cannot install dependencies automatically.")
-        print("  - Please run the following command in a PythonAnywhere bash console:")
-        print(f"  - {command}")
-    else:
-        print(f"  - Could not create console for dependency installation: {response.status_code} - {response.text}")
+    # --- Upload project files ---
+    for file in files_to_upload:
+        upload_file(os.path.join(PROJECT_DIR, file), f"/home/{PYTHONANYWHERE_USERNAME}/mysite/{file}")
 
+    # --- Upload WSGI file ---
+    print("--- Uploading WSGI configuration ---")
+    upload_file(os.path.join(PROJECT_DIR, "wsgi.py"), WSGI_FILE_PATH)
 
-def reload_webapp():
-    """Reloads the web app to apply changes."""
-    print("Reloading web app...")
-    url = WEBAPP_URL.format(username=PYTHONANYWHERE_USERNAME, domain_name=DOMAIN_NAME) + "reload/"
-    response = requests.post(url, headers=get_headers())
+    # --- Upload templates ---
+    templates_dir = os.path.join(PROJECT_DIR, "templates")
+    for template in os.listdir(templates_dir):
+        upload_file(os.path.join(templates_dir, template), f"/home/{PYTHONANYWHERE_USERNAME}/mysite/templates/{template}")
+
+    # --- Upload static files ---
+    static_dir = os.path.join(PROJECT_DIR, "static")
+    for root, _, files in os.walk(static_dir):
+        for file in files:
+            local_path = os.path.join(root, file)
+            remote_path = os.path.join(f"/home/{PYTHONANYWHERE_USERNAME}/mysite", os.path.relpath(local_path, PROJECT_DIR)).replace("\\", "/")
+            upload_file(local_path, remote_path)
+
+    # --- Reload the web app ---
+    headers = {"Authorization": f"Token {PYTHONANYWHERE_API_TOKEN}"}
+    response = requests.post(RELOAD_WEB_APP_URL, headers=headers)
     if response.status_code == 200:
         print("Web app reloaded successfully.")
     else:
-        print(f"Error reloading web app: {response.status_code} - {response.text}")
-        print("Please try reloading the web app manually from your PythonAnywhere dashboard.")
-        exit(1)
+        print(f"Failed to reload web app. Status: {response.status_code}, Response: {response.text}")
+
+    print("--- Deployment Finished ---")
 
 if __name__ == "__main__":
-    # delete_existing_webapp()
-    # create_new_webapp()
-    upload_project_files()
-    configure_wsgi_file()
-    install_dependencies()
-    print("\nFile upload and configuration complete.")
-    print("Attempting to reload web app...")
-    reload_webapp()
-    print("\nDeployment to PythonAnywhere completed successfully!")
-    print(f"Your site is live at: http://{DOMAIN_NAME}")
+    main()

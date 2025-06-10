@@ -47,3 +47,7 @@ Config_Notion.env
 .DS_Store
 Thumbs.db 
 .vercel
+
+# Environment variables
+Config_Email.env
+Config_Notion.env

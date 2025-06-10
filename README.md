@@ -1,62 +1,56 @@
-# Blog Roberto D'Alicandro
+# Flask Blog with Notion DB Deployment to PythonAnywhere
 
-Un blog personale sviluppato con Flask che racconta la mia esperienza e le mie riflessioni sul mondo dell'innovazione e dell'Intelligenza Artificiale.
+This document outlines the steps to deploy the Flask blog application to PythonAnywhere.
 
-## Caratteristiche
+## Prerequisites
 
-- Blog con articoli dinamici
-- Sezione "Chi Sono" con il mio profilo professionale
-- Sezione "Software Gratuito" per condividere risorse utili
-- Design moderno e responsive con Tailwind CSS
-- Visualizzazioni grafiche interattive con Chart.js
+- A PythonAnywhere account.
+- Your PythonAnywhere API token.
+- Your Notion API token and database IDs.
+- Your email provider credentials.
 
-## Requisiti
+## Deployment Steps
 
-- Python 3.8+
-- Flask
-- SQLAlchemy
-- Altri requisiti sono elencati in `requirements.txt`
+1.  **Set API Token:**
+    - Open `deploy_to_pythonanywhere.py`.
+    - Replace `YOUR_PYTHONANYWHERE_API_TOKEN` with your actual PythonAnywhere API token.
 
-## Installazione
+2.  **Configure Environment Variables:**
+    - Ensure `Config_Email.env` and `Config_Notion.env` have the correct production values.
 
-1. Clona il repository
-```bash
-git clone https://github.com/rdalican/blog-rda.git
-cd blog-rda
-```
+3.  **Run Deployment Script:**
+    - Execute the deployment script from your local machine:
+      ```bash
+      python deploy_to_pythonanywhere.py
+      ```
 
-2. Crea un ambiente virtuale e attivalo
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
+4.  **PythonAnywhere Console Setup:**
+    - Log in to your PythonAnywhere account and open a **Bash Console**.
+    - Create a virtual environment (replace with your desired Python version):
+      ```bash
+      mkvirtualenv --python=python3.9 flask_blog_venv
+      ```
+    - Navigate to your project directory:
+      ```bash
+      cd ~/mysite
+      ```
+    - Install the required packages:
+      ```bash
+      pip install -r requirements.txt
+      ```
 
-3. Installa le dipendenze
-```bash
-pip install -r requirements.txt
-```
+5.  **Configure PythonAnywhere Web App:**
+    - Go to the **Web** tab in your PythonAnywhere dashboard.
+    - **Add a new web app**:
+        - Select **Manual configuration**.
+        - Select **Python 3.9** (or the version you used for the virtualenv).
+    - **Web App Configuration**:
+        - **Source code**: `/home/rdalican/mysite`
+        - **Virtualenv**: `/home/rdalican/.virtualenvs/flask_blog_venv`
+    - **WSGI Configuration**:
+        - Click on the link to the WSGI configuration file (e.g., `/var/www/rdalican_pythonanywhere_com_wsgi.py`).
+        - Replace the entire content of this file with the content from your local `flask_app.py`.
+    - **Reload Web App**:
+        - Click the "Reload" button on the Web tab.
 
-4. Avvia l'applicazione
-```bash
-python app.py
-```
-
-L'applicazione sarà disponibile all'indirizzo `http://localhost:5000`
-
-## Struttura del Progetto
-
-```
-blog-rda/
-├── app.py              # Applicazione Flask principale
-├── templates/          # Template HTML
-├── static/            
-│   ├── images/        # Immagini
-│   └── js/           # File JavaScript
-├── requirements.txt    # Dipendenze Python
-└── README.md          # Questo file
-```
-
-## Licenza
-
-Tutti i diritti riservati - Roberto D'Alicandro
+Your application should now be live at `http://rdalican.pythonanywhere.com`.
