@@ -7,8 +7,11 @@ from dotenv import load_dotenv
 from notion_manager import NotionManager
 
 # Load environment variables from .env files
-load_dotenv('Config_Email.env')
-load_dotenv('Config_Notion.env')
+# Construct the full path to the .env files
+# This ensures they are found in both local and production environments
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, 'Config_Email.env'))
+load_dotenv(os.path.join(basedir, 'Config_Notion.env'))
 
 # --- App Initialization and Configuration ---
 app = Flask(__name__)
@@ -63,27 +66,26 @@ def blog():
     
     return render_template('blog.html', posts=posts)
 
-@app.route('/post/<string:post_id>')
-def post(post_id):
+@app.route('/post/<string:post_slug>')
+def post(post_slug):
     if not notion:
         flash('Notion integration is not configured.', 'error')
         return redirect(url_for('blog'))
 
-    success, post_data = notion.get_post_by_id(post_id)
-    if not success:
+    success, post_data = notion.get_post_by_slug(post_slug)
+    if not success or not post_data:
         flash('Post not found.', 'error')
         return redirect(url_for('blog'))
 
-    custom_slug = post_data.get('post_id', post_id)
-    comments_success, comments = notion.get_comments_for_post(custom_slug)
+    comments_success, comments = notion.get_comments_for_post(post_slug)
     
     return render_template('post.html', post=post_data, comments=comments if comments_success else [])
 
-@app.route('/post/<string:post_id>/comment', methods=['POST'])
-def add_comment_route(post_id):
+@app.route('/post/<string:post_slug>/comment', methods=['POST'])
+def add_comment_route(post_slug):
     if not notion:
         flash('Notion integration is not configured.', 'error')
-        return redirect(url_for('post', post_id=post_id))
+        return redirect(url_for('post', post_slug=post_slug))
 
     name = request.form.get('name')
     email = request.form.get('email')
@@ -93,16 +95,16 @@ def add_comment_route(post_id):
 
     if not name or not email or not message:
         flash('Name, email, and message are required.', 'error')
-        return redirect(url_for('post', post_id=post_id))
+        return redirect(url_for('post', post_slug=post_slug))
 
-    success, _ = notion.add_comment(name, email, message, post_id, url, parent_id)
+    success, _ = notion.add_comment(name, email, message, post_slug, url, parent_id)
 
     if success:
         flash('Your comment has been submitted and is awaiting moderation.', 'success')
     else:
         flash('There was an error submitting your comment.', 'error')
 
-    return redirect(url_for('post', post_id=post_id))
+    return redirect(url_for('post', post_slug=post_slug))
 
 @app.route('/moderation')
 def moderation():

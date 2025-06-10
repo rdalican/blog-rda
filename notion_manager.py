@@ -6,16 +6,11 @@ import markdown2
 
 class NotionManager:
     def __init__(self):
-        # Debug info per l'ambiente
-        print("=== Debug Informazioni Notion ===")
-        print(f"Directory corrente: {os.getcwd()}")
-        print(f"File di configurazione esiste: {os.path.exists('Config_Notion.env')}")
-        
         # Caricamento configurazione
-        load_dotenv('Config_Notion.env')
+        # Le variabili d'ambiente vengono caricate dal file blog_app.py
         self.token = os.getenv('NOTION_TOKEN')
-        self.contacts_db_id = os.getenv('NOTION_DATABASE_ID')
-        self.comments_db_id = "2062c37023cf80dba102d26f3a01173c" # Assicurati che questo ID sia corretto o caricalo da .env
+        self.contacts_db_id = os.getenv('NOTION_CONTACTS_DB_ID')
+        self.comments_db_id = os.getenv('NOTION_COMMENTS_DB_ID')
         
         # Carica l'ID del database dei post o usa un fallback
         self.posts_db_id_env = os.getenv('NOTION_POSTS_DB_ID')
@@ -115,6 +110,7 @@ class NotionManager:
                 parent={"database_id": self.comments_db_id},
                 properties=new_comment
             )
+            print(f"Risposta da Notion API: {response}")
             print(f"[OK] Commento aggiunto con successo da: {name}. In attesa di moderazione.")
             return True, response
         except Exception as e:
@@ -232,12 +228,15 @@ class NotionManager:
             stato_obj = properties.get("Stato", {}).get("select")
             stato = stato_obj["name"] if stato_obj and stato_obj.get("name") else ""
             
+            post_id_list = properties.get("Post ID", {}).get("rich_text", [])
+            post_id_slug = post_id_list[0].get("text", {}).get("content", page["id"]) if post_id_list and post_id_list[0].get("text") else page["id"]
+
             post = {
                 "id": notion_page_id, # Notion Page ID
                 "title": title,
                 "date": date,
                 "content": full_html_content, # HTML completo dai blocchi code
-                "post_id": post_id, # Slug / ID personalizzato
+                "post_id": post_id_slug, # Slug / ID personalizzato
                 "email": email,
                 "stato": stato
             }
@@ -245,6 +244,37 @@ class NotionManager:
             return True, post
         except Exception as e:
             print(f"[ERROR] Errore nel recupero del post: {str(e)}")
+            return False, None
+
+    def get_post_by_slug(self, slug):
+        """
+        Recupera un post specifico utilizzando il suo slug univoco.
+        """
+        try:
+            # Cerca nel database un post con lo slug corrispondente
+            response = self.notion.databases.query(
+                database_id=self.posts_db_id,
+                filter={
+                    "property": "Post ID",
+                    "rich_text": {
+                        "equals": slug
+                    }
+                }
+            )
+
+            if not response.get("results"):
+                print(f"Nessun post trovato con lo slug: {slug}")
+                return False, None
+            
+            # Prendi il primo risultato (lo slug dovrebbe essere univoco)
+            page = response["results"][0]
+            
+            # Una volta ottenuta la pagina, possiamo usare la logica di get_post_by_id per estrarre i dettagli
+            # ma dobbiamo passare l'ID della pagina, non lo slug
+            return self.get_post_by_id(page["id"])
+
+        except Exception as e:
+            print(f"[ERROR] Errore nel recupero del post con slug {slug}: {str(e)}")
             return False, None
 
     def get_comments_for_post(self, post_id):
@@ -290,7 +320,7 @@ class NotionManager:
                     'id': page['id'],
                     'name': props['Name']['title'][0]['text']['content'] if props['Name']['title'] else 'Anonimo',
                     'message': props['Messaggio']['rich_text'][0]['text']['content'] if props['Messaggio']['rich_text'] else '',
-                    'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00')),
+                    'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00')) if props.get('Data') and props['Data'].get('date') and props['Data']['date'].get('start') else None,
                     'url': props.get('URL', {}).get('url'),
                     'parent_id': parent_id,
                     'children': []
@@ -532,7 +562,7 @@ class NotionManager:
                     'name': props['Name']['title'][0]['text']['content'] if props['Name']['title'] else 'Anonimo',
                     'message': props['Messaggio']['rich_text'][0]['text']['content'] if props['Messaggio']['rich_text'] else '',
                     'post_id': props['Post ID']['rich_text'][0]['text']['content'] if props['Post ID']['rich_text'] else '',
-                    'date': props['Data']['date']['start'],
+                    'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00')),
                     'status': props['Stato']['select']['name']
                 })
             

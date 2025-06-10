@@ -4,7 +4,7 @@
     <!-- Comment Form -->
     <div id="comment-form-container" class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
         <h4 class="text-lg font-semibold mb-4">Lascia un commento</h4>
-        <form id="comment-form" action="{{ url_for('add_comment_route', post_id=post.id) }}" method="POST">
+        <form id="comment-form" action="{{ url_for('add_comment_route', post_slug=post.post_id) }}" method="POST">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">Nome *</label>

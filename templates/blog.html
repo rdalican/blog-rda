@@ -14,7 +14,7 @@
                             <article class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
                                 <div class="p-6 flex-grow">
                                     <h2 class="text-2xl font-bold mb-2">
-                                        <a href="{{ url_for('post', post_id=post.id) }}" class="text-gray-900 hover:text-blue-600 transition duration-300">{{ post.title }}</a>
+                                        <a href="{{ url_for('post', post_slug=post.post_id) }}" class="text-gray-900 hover:text-blue-600 transition duration-300">{{ post.title }}</a>
                                     </h2>
                                     <div class="text-gray-500 text-sm mb-4">
                                         Pubblicato il <time datetime="{{ post.date }}">{{ post.date[:10] }}</time>
@@ -24,7 +24,7 @@
                                     </div>
                                 </div>
                                 <div class="p-6 bg-gray-50">
-                                    <a href="{{ url_for('post', post_id=post.id) }}" class="font-semibold text-blue-600 hover:text-blue-800 transition duration-300">Leggi di più →</a>
+                                    <a href="{{ url_for('post', post_slug=post.post_id) }}" class="font-semibold text-blue-600 hover:text-blue-800 transition duration-300">Leggi di più →</a>
                                 </div>
                             </article>
                         {% endfor %}

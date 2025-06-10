@@ -42,7 +42,7 @@
                                 <div class="text-sm text-gray-800">{{ comment.message }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <a href="{{ url_for('post', post_id=comment.post_id) }}" class="text-sm text-blue-600 hover:underline" target="_blank">{{ comment.post_id[:20] }}...</a>
+                                <a href="{{ url_for('post', post_slug=comment.post_id) }}" class="text-sm text-blue-600 hover:underline" target="_blank">{{ comment.post_id[:20] }}...</a>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-500">{{ comment.date.strftime('%Y-%m-%d %H:%M') }}</div>
