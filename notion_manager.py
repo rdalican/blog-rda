@@ -316,11 +316,27 @@ class NotionManager:
                 parent_id_list = props.get("Parent Comment", {}).get("rich_text", [])
                 parent_id = parent_id_list[0].get("text", {}).get("content") if parent_id_list else None
 
+                name_list = props.get('Name', {}).get('title', [])
+                name = name_list[0].get('text', {}).get('content', 'Anonimo') if name_list else 'Anonimo'
+
+                message_list = props.get('Messaggio', {}).get('rich_text', [])
+                message = message_list[0].get('text', {}).get('content', '') if message_list else ''
+
+                name_list = props.get('Name', {}).get('title', [])
+                name = name_list[0].get('text', {}).get('content', 'Anonimo') if name_list and name_list[0].get('text') else 'Anonimo'
+
+                message_list = props.get('Messaggio', {}).get('rich_text', [])
+                message = message_list[0].get('text', {}).get('content', '') if message_list and message_list[0].get('text') else ''
+
+                date_obj = props.get('Data', {}).get('date', {})
+                date_str = date_obj.get('start')
+                date = datetime.fromisoformat(date_str.replace('Z', '+00:00')) if date_str else None
+
                 comments_flat.append({
                     'id': page['id'],
-                    'name': props.get('Name', {}).get('title', [{}])[0].get('text', {}).get('content', 'Anonimo'),
-                    'message': props.get('Messaggio', {}).get('rich_text', [{}])[0].get('text', {}).get('content', ''),
-                    'date': datetime.fromisoformat(props['Data']['date']['start'].replace('Z', '+00:00')) if props.get('Data') and props['Data'].get('date') and props['Data']['date'].get('start') else None,
+                    'name': name,
+                    'message': message,
+                    'date': date,
                     'url': props.get('URL', {}).get('url'),
                     'parent_id': parent_id,
                     'children': []
