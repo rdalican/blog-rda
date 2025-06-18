@@ -3,6 +3,7 @@ from notion_client import Client
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import markdown2
+import secrets
 
 class NotionManager:
     def __init__(self):
@@ -85,24 +86,27 @@ class NotionManager:
 
     def add_comment(self, name, email, message, post_id, url=None, parent_id=None):
         """
-        Aggiunge un nuovo commento al database, gestendo anche risposte e URL.
+        Aggiunge un nuovo commento al database, genera token di moderazione e li restituisce.
         """
         try:
+            approve_token = secrets.token_urlsafe(16)
+            delete_token = secrets.token_urlsafe(16)
+
             new_comment = {
                 "Name": {"title": [{"text": {"content": name}}]},
                 "Email": {"email": email},
                 "Messaggio": {"rich_text": [{"text": {"content": message}}]},
                 "Post ID": {"rich_text": [{"text": {"content": post_id}}]},
                 "Data": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
-                "Stato": {"select": {"name": "Nuovo"}} # Tutti i commenti necessitano di moderazione
+                "Stato": {"select": {"name": "Nuovo"}},
+                "Approve Token": {"rich_text": [{"text": {"content": approve_token}}]},
+                "Delete Token": {"rich_text": [{"text": {"content": delete_token}}]}
             }
 
             if url:
-                # Assicurati che la proprietà "URL" esista nel tuo database dei commenti
                 new_comment["URL"] = {"url": url}
             
             if parent_id:
-                # Assicurati che la proprietà "Parent Comment" esista per le risposte
                 new_comment["Parent Comment"] = {"rich_text": [{"text": {"content": parent_id}}]}
 
             print(f"Tentativo di aggiunta commento per il post {post_id}")
@@ -110,15 +114,16 @@ class NotionManager:
                 parent={"database_id": self.comments_db_id},
                 properties=new_comment
             )
-            print(f"Risposta da Notion API: {response}")
             print(f"[OK] Commento aggiunto con successo da: {name}. In attesa di moderazione.")
-            return True, response
+            
+            # Restituisce i token per l'invio dell'email
+            return True, {"page_id": response["id"], "approve_token": approve_token, "delete_token": delete_token}
         except Exception as e:
             error_msg = str(e)
             print(f"[ERROR] Errore durante l'aggiunta del commento: {error_msg}")
-            if "URL" in error_msg or "Parent Comment" in error_msg:
-                print("[INFO]  Verifica che le proprietà 'URL' (tipo URL) e 'Parent Comment' (tipo Rich Text) esistano nel tuo database dei commenti in Notion.")
-            return False, error_msg
+            if "Approve Token" in error_msg or "Delete Token" in error_msg:
+                print("[INFO]  Verifica che le proprietà 'Approve Token' e 'Delete Token' (tipo Rich Text) esistano nel database dei commenti.")
+            return False, {"error": error_msg}
 
     def get_blog_posts(self):
         """
@@ -590,16 +595,18 @@ class NotionManager:
 
     def update_comment_status(self, comment_id, status, moderator_notes=None):
         """
-        Aggiorna lo stato di un commento e opzionalmente aggiunge note di moderazione.
+        Aggiorna lo stato di un commento e cancella i token di moderazione.
         """
         try:
             print(f"Aggiornamento stato del commento {comment_id} a '{status}'")
             properties_to_update = {
-                "Stato": {"select": {"name": status}}
+                "Stato": {"select": {"name": status}},
+                # Cancella i token per invalidare i link di moderazione
+                "Approve Token": {"rich_text": [{"text": {"content": ""}}]},
+                "Delete Token": {"rich_text": [{"text": {"content": ""}}]}
             }
             
             if moderator_notes:
-                # Assicurati che esista una proprietà "Note Moderatore" (Rich Text)
                 properties_to_update["Note Moderatore"] = {"rich_text": [{"text": {"content": moderator_notes}}]}
 
             self.notion.pages.update(
@@ -611,8 +618,6 @@ class NotionManager:
         except Exception as e:
             error_msg = str(e)
             print(f"[ERROR] Errore durante l'aggiornamento dello stato del commento {comment_id}: {error_msg}")
-            if "Note Moderatore" in error_msg:
-                print("[INFO]  Verifica che la proprietà 'Note Moderatore' (tipo Rich Text) esista nel tuo database.")
             return False, error_msg
 
     def update_post_content(self, page_id, new_html_content):
@@ -650,3 +655,58 @@ class NotionManager:
             error_msg = str(e)
             print(f"[ERROR] Errore durante l'aggiornamento del contenuto del post {page_id}: {error_msg}")
             return False, error_msg
+
+    def update_post_properties(self, page_id, properties):
+        """
+        Aggiorna le proprietà di una pagina (post) esistente.
+        """
+        try:
+            print(f"Aggiornamento proprietà per la pagina {page_id}...")
+            self.notion.pages.update(page_id=page_id, properties=properties)
+            print(f"[OK] Proprietà della pagina {page_id} aggiornate con successo.")
+            return True, page_id
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[ERROR] Errore durante l'aggiornamento delle proprietà della pagina {page_id}: {error_msg}")
+            return False, error_msg
+
+    def delete_post(self, page_id):
+        """
+        Elimina (archivia) un post dal database.
+        """
+        try:
+            print(f"Archiviazione del post con Page ID: {page_id}")
+            self.notion.pages.update(page_id=page_id, archived=True)
+            print(f"[OK] Post {page_id} archiviato con successo.")
+            return True, page_id
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[ERROR] Errore durante l'archiviazione del post {page_id}: {error_msg}")
+            return False, error_msg
+
+    def get_comment_by_token(self, token):
+        """
+        Recupera un commento usando un token di approvazione o eliminazione.
+        """
+        try:
+            print(f"Ricerca commento con token: {token[:8]}...") # Logga solo una parte del token
+            response = self.notion.databases.query(
+                database_id=self.comments_db_id,
+                filter={
+                    "or": [
+                        {"property": "Approve Token", "rich_text": {"equals": token}},
+                        {"property": "Delete Token", "rich_text": {"equals": token}}
+                    ]
+                }
+            )
+            
+            if response and response['results']:
+                comment_page = response['results'][0]
+                print(f"[OK] Commento trovato con ID: {comment_page['id']}")
+                return True, comment_page
+            else:
+                print("[WARNING] Nessun commento trovato con il token specificato.")
+                return False, None
+        except Exception as e:
+            print(f"[ERROR] Errore durante la ricerca del commento con token: {str(e)}")
+            return False, None

@@ -51,8 +51,14 @@ def main():
 
     # --- Upload templates ---
     templates_dir = os.path.join(PROJECT_DIR, "templates")
-    for template in os.listdir(templates_dir):
-        upload_file(os.path.join(templates_dir, template), f"/home/{PYTHONANYWHERE_USERNAME}/mysite/templates/{template}")
+    for root, _, files in os.walk(templates_dir):
+        for file in files:
+            # Skip the admin.html file if it's not meant to be deployed yet, or handle it specifically
+            if file == "admin.html":
+                print(f"--- Uploading Admin Template: {file} ---")
+            local_path = os.path.join(root, file)
+            remote_path = os.path.join(f"/home/{PYTHONANYWHERE_USERNAME}/mysite", os.path.relpath(local_path, PROJECT_DIR)).replace("\\", "/")
+            upload_file(local_path, remote_path)
 
     # --- Upload static files ---
     static_dir = os.path.join(PROJECT_DIR, "static")

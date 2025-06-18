@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuovo Commento da Moderare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .comment-box {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .comment-author {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .actions {
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        .approve-button {
+            background-color: #28a745;
+        }
+        .delete-button {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Nuovo Commento da Moderare</div>
+        <p>Un nuovo commento è stato inviato sul blog e attende la tua approvazione.</p>
+        
+        <div class="comment-box">
+            <div class="comment-author">Da: {{ name }}</div>
+            <p>"{{ message_content }}"</p>
+        </div>
+
+        <div class="actions">
+            <p>Per favore, modera il commento:</p>
+            <a href="{{ approve_url }}" class="button approve-button">Approva</a>
+            <a href="{{ delete_url }}" class="button delete-button">Elimina</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Risultato Moderazione
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto text-center">
+        {% if success %}
+            <div class="p-6 bg-green-100 border-2 border-green-500 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-green-800 mb-4">Operazione Completata</h1>
+                <p class="text-lg text-gray-700">{{ message }}</p>
+            </div>
+        {% else %}
+            <div class="p-6 bg-red-100 border-2 border-red-500 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-red-800 mb-4">Errore</h1>
+                <p class="text-lg text-gray-700">{{ message }}</p>
+            </div>
+        {% endif %}
+        <a href="{{ url_for('index') }}" class="mt-8 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Torna alla Home
+        </a>
+    </div>
+</div>
+{% endblock %}

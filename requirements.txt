@@ -1,6 +1,6 @@
-flask
-flask_mail
-python-dotenv
-notion-client
-markdown2
-markdown2
+Flask==3.0.2
+Flask-Mail==0.9.1
+python-dotenv==1.0.1
+notion-client==2.2.1
+beautifulsoup4==4.13.3
+requests==2.32.3

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Editor Post</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tiny.cloud/1/xfn857edqim6y2s2djt3bnq5vzqyyi2yvx5yj42qbnejfcmf/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+        tinymce.init({
+            selector: 'textarea#editor',
+            plugins: 'autolink lists link image table wordcount',
+            toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link image | removeformat',
+            height: 600,
+            images_upload_url: '/admin/upload_image',
+            automatic_uploads: true,
+            file_picker_types: 'image',
+            file_picker_callback: function (cb, value, meta) {
+                var input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                input.onchange = function () {
+                    var file = this.files[0];
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        var id = 'blobid' + (new Date()).getTime();
+                        var blobCache =  tinymce.activeEditor.editorUpload.blobCache;
+                        var base64 = reader.result.split(',')[1];
+                        var blobInfo = blobCache.create(id, file, base64);
+                        blobCache.add(blobInfo);
+                        cb(blobInfo.blobUri(), { title: file.name });
+                    };
+                    reader.readAsDataURL(file);
+                };
+                input.click();
+            },
+        });
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Editor Post del Blog</h1>
+        <form action="{{ action_url }}" method="post">
+            <div class="mb-4">
+                <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Titolo del Post:</label>
+                <input type="text" id="title" name="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ post.title if post else '' }}" required>
+            </div>
+            <div class="mb-6">
+                <label for="editor" class="block text-gray-700 text-sm font-bold mb-2">Contenuto del Post:</label>
+                <textarea id="editor" name="content">{{ post.content | safe if post else '' }}</textarea>
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    {{ 'Aggiorna' if post else 'Pubblica' }} Post
+                </button>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-gray-600 hover:underline">Annulla</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
