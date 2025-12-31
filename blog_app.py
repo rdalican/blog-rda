@@ -2,7 +2,7 @@ import os
 import re
 import socket
 from datetime import datetime, timezone
-from flask import Flask, render_template, url_for, flash, redirect, request, session
+from flask import Flask, render_template, url_for, flash, redirect, request, session, send_from_directory
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 from notion_manager import NotionManager
@@ -17,32 +17,43 @@ load_dotenv(os.path.join(basedir, 'Config_Notion.env'))
 
 # --- App Initialization and Configuration ---
 app = Flask(__name__)
+
+# IMPORTANT: SECRET_KEY must be set in production environment variables
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_default_secret_key')
+
+# Production/Development mode detection
+IS_PRODUCTION = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PRODUCTION')
+if IS_PRODUCTION:
+    app.config['DEBUG'] = False
+    print("--- RUNNING IN PRODUCTION MODE ---")
+else:
+    app.config['DEBUG'] = True
+    print("--- RUNNING IN DEVELOPMENT MODE ---")
 
 # --- Dynamic SERVER_NAME for correct URL generation ---
 # Check if running on PythonAnywhere by looking for a specific environment variable
-if 'PYTHONANYWHERE_DOMAIN' in os.environ:
+# if 'PYTHONANYWHERE_DOMAIN' in os.environ:
     # Production environment on PythonAnywhere
-    public_url = os.getenv('PUBLIC_URL')
-    if public_url:
-        app.config['SERVER_NAME'] = public_url
-        print(f"--- SERVER_NAME configured for PRODUCTION: {app.config['SERVER_NAME']} ---")
-    else:
+    #public_url = os.getenv('PUBLIC_URL')
+    #if public_url:
+        #app.config['SERVER_NAME'] = public_url
+        #print(f"--- SERVER_NAME configured for PRODUCTION: {app.config['SERVER_NAME']} ---")
+    #else:
         # Fallback to the domain provided by PythonAnywhere itself
-        app.config['SERVER_NAME'] = os.environ['PYTHONANYWHERE_DOMAIN']
-        print(f"--- WARNING: PUBLIC_URL not set. Falling back to PythonAnywhere domain: {app.config['SERVER_NAME']} ---")
-else:
+        #app.config['SERVER_NAME'] = os.environ['PYTHONANYWHERE_DOMAIN']
+        #print(f"--- WARNING: PUBLIC_URL not set. Falling back to PythonAnywhere domain: {app.config['SERVER_NAME']} ---")
+#else:
     # Local development environment
-    try:
-        hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+    #try:
+        #hostname = socket.gethostname()
+        #local_ip = socket.gethostbyname(hostname)
         # NOTE: This assumes the server runs on port 5000.
-        app.config['SERVER_NAME'] = f"{local_ip}:5000"
-        print(f"--- SERVER_NAME configured for LOCAL DEV: {app.config['SERVER_NAME']} ---")
-        print(f"--- Access the app via http://{local_ip}:5000 from any device on the network. ---")
-    except Exception as e:
-        print(f"--- WARNING: Could not determine local IP. Falling back to localhost. ---")
-        app.config['SERVER_NAME'] = '127.0.0.1:5000'
+        #app.config['SERVER_NAME'] = f"{local_ip}:5000"
+        #print(f"--- SERVER_NAME configured for LOCAL DEV: {app.config['SERVER_NAME']} ---")
+        #print(f"--- Access the app via http://{local_ip}:5000 from any device on the network. ---")
+    #except Exception as e:
+        #print(f"--- WARNING: Could not determine local IP. Falling back to localhost. ---")
+        #app.config['SERVER_NAME'] = '127.0.0.1:5000'
 
 
 # Email Configuration
@@ -222,10 +233,50 @@ def contact():
     
     return render_template('contact.html')
 
-@app.route('/downloads')
+@app.route('/downloads', methods=['GET', 'POST'])
 def downloads():
-    return render_template('downloads.html')
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        cognome = request.form.get('cognome')
+        email = request.form.get('email')
 
+        if not nome or not cognome or not email:
+            flash('Tutti i campi sono obbligatori.', 'error')
+            return render_template('downloads.html', download_ready=False)
+
+        # Save to Notion
+        success, message = notion.add_download_request(nome, cognome, email)
+        if not success:
+            flash(f'Errore nel salvataggio dei dati: {message}', 'error')
+            return render_template('downloads.html', download_ready=False)
+
+        # Mostra il link per il download
+        return render_template('downloads.html', download_ready=True)
+            
+    return render_template('downloads.html', download_ready=False)
+
+@app.route('/download_sistematica')
+def download_sistematica():
+    try:
+        return send_from_directory(
+            directory=os.path.join(app.root_path, 'static', 'files'),
+            path='Sistematica Commerciale.zip',  # <-- Nome del file sul server PythonAnywhere
+            as_attachment=True
+        )
+    except FileNotFoundError:
+        flash('ERRORE CRITICO: Il file per il download non è stato trovato sul server. Contattare il supporto.', 'error')
+        return redirect(url_for('downloads'))
+    
+@app.route('/debug_list_files')
+def debug_list_files():
+    print("DEBUG: /debug_list_files route called", flush=True)
+    files_dir = os.path.join(app.root_path, 'static', 'files')
+    try:
+        files = os.listdir(files_dir)
+        return '<br>'.join(files)
+    except Exception as e:
+        return f"Errore nell'accesso alla cartella: {e}"
+    
 # --- Admin Routes ---
 def is_admin():
     return session.get('is_admin', False)
@@ -274,8 +325,10 @@ def admin_new_post():
         # --- Process HTML to create absolute image URLs ---
         soup = BeautifulSoup(content, 'html.parser')
         images = soup.find_all('img')
-        base_url = "https://rdalican.pythonanywhere.com"
-        
+
+        # Determine base URL based on environment
+        base_url = os.environ.get('PUBLIC_URL', 'https://rdalican.pythonanywhere.com')
+
         for img in images:
             src = img.get('src')
             if src and src.startswith('/'):
@@ -319,8 +372,10 @@ def admin_edit_post(post_id):
         # --- Process HTML to create absolute image URLs ---
         soup = BeautifulSoup(content, 'html.parser')
         images = soup.find_all('img')
-        base_url = "https://rdalican.pythonanywhere.com"
-        
+
+        # Determine base URL based on environment
+        base_url = os.environ.get('PUBLIC_URL', 'https://rdalican.pythonanywhere.com')
+
         for img in images:
             src = img.get('src')
             if src and src.startswith('/'):
@@ -372,4 +427,13 @@ def upload_image():
         return {'location': f'/static/images/{filename}'}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    # For local development only
+    # In production, Gunicorn will handle this
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=not IS_PRODUCTION)
+
+
+@app.route('/test_copilot')
+def test_copilot():
+    print("DEBUG: Test Copilot route called", flush=True)
+    return "Test Copilot OK"

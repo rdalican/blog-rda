@@ -12,6 +12,7 @@ class NotionManager:
         self.token = os.getenv('NOTION_TOKEN')
         self.contacts_db_id = os.getenv('NOTION_CONTACTS_DB_ID')
         self.comments_db_id = os.getenv('NOTION_COMMENTS_DB_ID')
+        self.download_db_id = os.getenv('NOTION_DOWNLOAD_DB_ID')
         
         # Carica l'ID del database dei post o usa un fallback
         self.posts_db_id_env = os.getenv('NOTION_POSTS_DB_ID')
@@ -29,33 +30,43 @@ class NotionManager:
         print(f"Database Contatti ID: {self.contacts_db_id}")
         print(f"Database Commenti ID: {self.comments_db_id}")
         print(f"Database Posts ID: {self.posts_db_id}")
+        print(f"Database Download ID: {self.download_db_id}")
         
         if not self.token or not self.contacts_db_id:
             raise ValueError("Token Notion o Database ID mancanti nel file Config_Notion.env")
             
+        self.notion = Client(auth=self.token)
+        
+        # Test connections and set db_ids to None on failure
         try:
-            print("\nTentativo di connessione a Notion...")
-            self.notion = Client(auth=self.token)
-            
-            # Test della connessione ai database
-            print(f"Verifica accesso al database contatti: {self.contacts_db_id}")
-            contacts_db = self.notion.databases.retrieve(self.contacts_db_id)
+            self.notion.databases.retrieve(self.contacts_db_id)
             print("[OK] Database contatti trovato!")
-            
-            print(f"Verifica accesso al database commenti: {self.comments_db_id}")
-            comments_db = self.notion.databases.retrieve(self.comments_db_id)
-            print("[OK] Database commenti trovato!")
-
-            print(f"Verifica accesso al database posts: {self.posts_db_id}")
-            if self.posts_db_id: # Verifica solo se posts_db_id è definito
-                posts_db = self.notion.databases.retrieve(self.posts_db_id)
-                print("[OK] Database posts trovato!")
-            else:
-                print("[WARNING] Database posts non configurato specificamente (posts_db_id is None).")
-            
         except Exception as e:
-            print(f"\n[ERROR] Errore di connessione a Notion: {str(e)}")
-            raise
+            print(f"[WARNING] Impossibile accedere al database contatti: {e}. La funzionalità di contatto sarà disabilitata.")
+            self.contacts_db_id = None
+            
+        try:
+            self.notion.databases.retrieve(self.comments_db_id)
+            print("[OK] Database commenti trovato!")
+        except Exception as e:
+            print(f"[WARNING] Impossibile accedere al database commenti: {e}. La funzionalità dei commenti sarà disabilitata.")
+            self.comments_db_id = None
+
+        if self.download_db_id:
+            try:
+                self.notion.databases.retrieve(self.download_db_id)
+                print("[OK] Database download trovato!")
+            except Exception as e:
+                print(f"[WARNING] Impossibile accedere al database download: {e}. La funzionalità di download sarà disabilitata.")
+                self.download_db_id = None
+        
+        if self.posts_db_id:
+            try:
+                self.notion.databases.retrieve(self.posts_db_id)
+                print("[OK] Database posts trovato!")
+            except Exception as e:
+                print(f"[WARNING] Impossibile accedere al database posts: {e}. La funzionalità del blog sarà disabilitata.")
+                self.posts_db_id = None
 
     def add_contact(self, name, email, message, company=None):
         """
@@ -82,6 +93,31 @@ class NotionManager:
         except Exception as e:
             error_msg = str(e)
             print(f"[ERROR] Errore durante l'aggiunta del contatto: {error_msg}")
+            return False, error_msg
+
+    def add_download_request(self, nome, cognome, email):
+        """
+        Aggiunge una nuova richiesta di download al database Notion.
+        """
+        if not self.download_db_id:
+            return False, "ID del database di download non configurato."
+
+        try:
+            new_page = {
+                "Nome": {"title": [{"text": {"content": nome}}]},
+                "Cognome": {"rich_text": [{"text": {"content": cognome}}]},
+                "Email": {"email": email}
+            }
+            
+            self.notion.pages.create(
+                parent={"database_id": self.download_db_id},
+                properties=new_page
+            )
+            print(f"[OK] Richiesta di download aggiunta con successo per: {email}")
+            return True, "Success"
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[ERROR] Errore durante l'aggiunta della richiesta di download: {error_msg}")
             return False, error_msg
 
     def add_comment(self, name, email, message, post_id, url=None, parent_id=None):

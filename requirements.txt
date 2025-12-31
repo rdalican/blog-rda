@@ -1,6 +1,24 @@
+# Core Flask Framework
 Flask==3.0.2
+Werkzeug==3.0.1
+
+# Flask Extensions
 Flask-Mail==0.9.1
-python-dotenv==1.0.1
+
+# Notion Integration
 notion-client==2.2.1
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# HTML Parsing
 beautifulsoup4==4.13.3
+lxml==5.2.2
+
+# HTTP Requests
 requests==2.32.3
+urllib3==2.2.1
+certifi==2024.7.4
+
+# Production WSGI Server (per Railway)
+gunicorn==21.2.0

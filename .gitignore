@@ -35,19 +35,29 @@ env/
 *.db
 *.sqlite3
 
-# Environment variables
+# Environment variables (IMPORTANTE: non committare mai!)
 .env
-Config_Notion.env
 *.env
+Config_Email.env
+Config_Notion.env
 
 # Logs
 *.log
 
 # System Files
 .DS_Store
-Thumbs.db 
+Thumbs.db
 .vercel
 
-# Environment variables
-Config_Email.env
-Config_Notion.env
+# Backups (troppo grandi per Git)
+backups/
+
+# Node modules (se presenti)
+node_modules/
+package-lock.json
+
+# File sensibili
+*secret*
+*password*
+credentials.json
+token.json
