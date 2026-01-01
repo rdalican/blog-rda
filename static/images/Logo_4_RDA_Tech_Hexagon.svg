@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="120" viewBox="0 0 120 120">
+    <defs>
+        <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#d4b896;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#8b7355;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <!-- Esagono -->
+    <polygon points="60,20 85,35 85,65 60,80 35,65 35,35" fill="url(#grad4)" stroke="#a0845c" stroke-width="2"/>
+    <!-- Elementi tech -->
+    <circle cx="45" cy="45" r="2" fill="white" opacity="0.8"/>
+    <circle cx="75" cy="45" r="2" fill="white" opacity="0.8"/>
+    <path d="M45 45 L60 60 L75 45" stroke="white" stroke-width="1.5" fill="none" opacity="0.8"/>
+    <!-- Lettera -->
+    <text x="60" y="68" font-family="Georgia, serif" font-size="24" font-weight="bold" 
+          text-anchor="middle" fill="white">R</text>
+</svg>

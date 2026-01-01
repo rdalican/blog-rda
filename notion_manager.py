@@ -273,13 +273,8 @@ class NotionManager:
             post_id_list = properties.get("Post ID", {}).get("rich_text", [])
             post_id_slug = post_id_list[0].get("text", {}).get("content", page["id"]) if post_id_list and post_id_list[0].get("text") else page["id"]
 
-            # Process images to make URLs absolute (with error handling)
+            # Keep original HTML content - Notion images are already properly hosted
             processed_content = full_html_content
-            try:
-                processed_content = self._process_image_urls(full_html_content)
-            except Exception as e_img:
-                print(f"[WARNING] Could not process images, using original content: {e_img}")
-                processed_content = full_html_content
 
             post = {
                 "id": notion_page_id, # Notion Page ID

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="120" viewBox="0 0 120 120">
+    <defs>
+        <linearGradient id="grad10" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f0e6d2;stop-opacity:1" />
+            <stop offset="30%" style="stop-color:#d4b896;stop-opacity:0.8" />
+            <stop offset="70%" style="stop-color:#bc9a6a;stop-opacity:0.6" />
+            <stop offset="100%" style="stop-color:#a0845c;stop-opacity:0.4" />
+        </linearGradient>
+    </defs>
+    <!-- Spirale -->
+    <path d="M60 60 Q70 50, 80 60 Q90 80, 60 80 Q20 80, 20 60 Q20 20, 60 20 Q100 20, 100 60 Q100 100, 60 100" 
+          fill="none" stroke="url(#grad10)" stroke-width="3"/>
+    <!-- Centro -->
+    <circle cx="60" cy="60" r="18" fill="#bc9a6a" opacity="0.9"/>
+    <text x="60" y="68" font-family="Georgia, serif" font-size="20" font-weight="bold" 
+          text-anchor="middle" fill="white">RD</text>
+</svg>

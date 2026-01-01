@@ -76,10 +76,6 @@ Video per Sistematica Commerciale/
 *.docx
 *.pptx
 *.pdf
-*.png
-*.jpg
-*.jpeg
-*.svg
 
 # Script di test
 test_*.js
