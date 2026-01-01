@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 import markdown2
 import secrets
+from bs4 import BeautifulSoup
 
 class NotionManager:
     def __init__(self):
@@ -268,20 +269,23 @@ class NotionManager:
 
             stato_obj = properties.get("Stato", {}).get("select")
             stato = stato_obj["name"] if stato_obj and stato_obj.get("name") else ""
-            
+
             post_id_list = properties.get("Post ID", {}).get("rich_text", [])
             post_id_slug = post_id_list[0].get("text", {}).get("content", page["id"]) if post_id_list and post_id_list[0].get("text") else page["id"]
+
+            # Process images to make URLs absolute
+            processed_content = self._process_image_urls(full_html_content)
 
             post = {
                 "id": notion_page_id, # Notion Page ID
                 "title": title,
                 "date": date,
-                "content": full_html_content, # HTML completo dai blocchi code
+                "content": processed_content, # HTML completo dai blocchi code con immagini processate
                 "post_id": post_id_slug, # Slug / ID personalizzato
                 "email": email,
                 "stato": stato
             }
-            
+
             return True, post
         except Exception as e:
             print(f"[ERROR] Errore nel recupero del post: {str(e)}")
@@ -746,3 +750,29 @@ class NotionManager:
         except Exception as e:
             print(f"[ERROR] Errore durante la ricerca del commento con token: {str(e)}")
             return False, None
+
+    def _process_image_urls(self, html_content):
+        """
+        Process HTML content to convert relative image URLs to absolute URLs.
+        This ensures images are properly displayed when the blog is deployed.
+        """
+        if not html_content:
+            return html_content
+
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            images = soup.find_all('img')
+
+            # Determine base URL based on environment
+            base_url = os.environ.get('PUBLIC_URL', 'https://blog-rda-production.up.railway.app')
+
+            for img in images:
+                src = img.get('src')
+                if src and src.startswith('/'):
+                    # Convert relative URL to absolute URL
+                    img['src'] = f"{base_url}{src}"
+
+            return str(soup)
+        except Exception as e:
+            print(f"[ERROR] Errore nel processing delle immagini: {str(e)}")
+            return html_content
