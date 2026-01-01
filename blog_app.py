@@ -141,23 +141,24 @@ def add_comment_route(post_slug):
     if success:
         flash('Il tuo commento è in fase di approvazione dal moderatore del sito.', 'success')
 
+        # Genera gli URL mentre siamo ancora nel contesto della richiesta
+        approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
+        delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
+
+        # Ottieni il titolo del post
+        post_title = 'Articolo sconosciuto'
+        try:
+            post_success, post_data = notion.get_post_by_slug(post_slug)
+            if post_success and post_data:
+                post_title = post_data.get('title', f'Post {post_slug}')
+        except Exception as e_post:
+            app.logger.warning(f"Could not fetch post title for email: {e_post}")
+            post_title = f'Post {post_slug}'
+
         # Invia email di moderazione in background (non bloccante)
-        def send_email_async():
+        def send_email_async(name, email, post_title, message_content, approve_url, delete_url):
             try:
                 with app.app_context():
-                    # Ottieni il titolo del post per l'email (con fallback sicuro)
-                    post_title = 'Articolo sconosciuto'
-                    try:
-                        post_success, post_data = notion.get_post_by_slug(post_slug)
-                        if post_success and post_data:
-                            post_title = post_data.get('title', f'Post {post_slug}')
-                    except Exception as e_post:
-                        app.logger.warning(f"Could not fetch post title for email: {e_post}")
-                        post_title = f'Post {post_slug}'
-
-                    approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
-                    delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
-
                     msg = Message(
                         '💬 Nuovo Commento da Moderare',
                         recipients=[app.config['MAIL_RECIPIENT']],
@@ -178,7 +179,7 @@ def add_comment_route(post_slug):
 
         # Avvia thread per invio email in background
         from threading import Thread
-        email_thread = Thread(target=send_email_async)
+        email_thread = Thread(target=send_email_async, args=(name, email, post_title, message_content, approve_url, delete_url))
         email_thread.daemon = True
         email_thread.start()
     else:
