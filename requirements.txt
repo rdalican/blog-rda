@@ -5,6 +5,9 @@ Werkzeug==3.0.1
 # Flask Extensions
 Flask-Mail==0.9.1
 
+# Email Service
+resend==0.8.0
+
 # Notion Integration
 notion-client==2.2.1
 

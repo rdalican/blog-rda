@@ -1,0 +1,7 @@
+sostituisci il link ad un'immagine temporanea di google con il test: "Una bussola che indica un percorso di cambiamento e adattabilità" del post 1 con l'immagine /static/images/Immagine 2.png e poi aggiorna il post
+
+sostituisci il link ad un'immagine temporanea di google con il test: "Una lampadina che trasforma il caos in una soluzione ordinata, simbolo di creatività" del post 1 con l'immagine /static/images/Immagine 3.png e poi aggiorna il post
+
+sostituisci il link ad un'immagine temporanea di google con il test: "Una figura umana con una barra di caricamento a simbolizzare l'apprendimento" del post 1 con l'immagine /static/images/Immagine 4.png e poi aggiorna il post
+
+sostituisci il link ad un'immagine temporanea di google con il test: "Un cervello e cuore che brillano in armonia, simbolo di intelligenza razionale ed emotiva" del post 1 con l'immagine /static/images/Immagine 5.png e poi aggiorna il post

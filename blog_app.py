@@ -7,6 +7,7 @@ from flask_mail import Mail, Message
 from dotenv import load_dotenv
 from notion_manager import NotionManager
 from bs4 import BeautifulSoup
+import resend
 
 # Load environment variables from .env files
 # Construct the full path to the .env files
@@ -67,6 +68,29 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 app.config['MAIL_RECIPIENT'] = os.environ.get('MAIL_RECIPIENT')
 
 mail = Mail(app)
+
+# Resend Configuration
+resend.api_key = os.environ.get('RESEND_API_KEY')
+
+# Helper function to send email via Resend
+def send_email_resend(to_email, subject, html_content):
+    """Send email using Resend API"""
+    try:
+        from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'onboarding@resend.dev')
+
+        params = {
+            "from": from_email,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content
+        }
+
+        response = resend.Emails.send(params)
+        print(f"[RESEND] Email sent successfully. ID: {response.get('id')}", flush=True)
+        return True, response
+    except Exception as e:
+        print(f"[RESEND] Failed to send email: {e}", flush=True)
+        return False, str(e)
 
 # Notion Manager Initialization
 try:
@@ -163,23 +187,28 @@ def add_comment_route(post_slug):
             try:
                 print(f"[EMAIL THREAD] Entering app context...", flush=True)
                 with app.app_context():
-                    print(f"[EMAIL THREAD] Creating email message...", flush=True)
-                    msg = Message(
-                        '💬 Nuovo Commento da Moderare',
-                        recipients=[app.config['MAIL_RECIPIENT']],
-                        html=render_template(
-                            'email/moderation_notification.html',
-                            name=name,
-                            email=email,
-                            post_title=post_title,
-                            message_content=message_content,
-                            approve_url=approve_url,
-                            delete_url=delete_url
-                        )
+                    print(f"[EMAIL THREAD] Rendering email template...", flush=True)
+                    html_content = render_template(
+                        'email/moderation_notification.html',
+                        name=name,
+                        email=email,
+                        post_title=post_title,
+                        message_content=message_content,
+                        approve_url=approve_url,
+                        delete_url=delete_url
                     )
-                    print(f"[EMAIL THREAD] Sending email to {app.config['MAIL_RECIPIENT']}...", flush=True)
-                    mail.send(msg)
-                    print(f"[EMAIL THREAD] ✅ Email sent successfully for comment by {name}", flush=True)
+
+                    print(f"[EMAIL THREAD] Sending email via Resend to {app.config['MAIL_RECIPIENT']}...", flush=True)
+                    success, response = send_email_resend(
+                        to_email=app.config['MAIL_RECIPIENT'],
+                        subject='💬 Nuovo Commento da Moderare',
+                        html_content=html_content
+                    )
+
+                    if success:
+                        print(f"[EMAIL THREAD] ✅ Email sent successfully for comment by {name}", flush=True)
+                    else:
+                        print(f"[EMAIL THREAD] ❌ Email failed: {response}", flush=True)
             except Exception as e:
                 print(f"[EMAIL THREAD] ❌ Failed to send email: {e}", flush=True)
                 import traceback
@@ -288,21 +317,26 @@ def downloads():
                 with app.app_context():
                     data_ora = datetime.now().strftime('%d/%m/%Y alle %H:%M')
 
-                    msg = Message(
-                        '📥 Nuova Richiesta Download - Sistematica Commerciale',
-                        recipients=[app.config['MAIL_RECIPIENT']],
-                        html=render_template(
-                            'email/download_notification.html',
-                            nome=nome,
-                            cognome=cognome,
-                            email=email,
-                            data=data_ora
-                        )
+                    html_content = render_template(
+                        'email/download_notification.html',
+                        nome=nome,
+                        cognome=cognome,
+                        email=email,
+                        data=data_ora
                     )
-                    mail.send(msg)
-                    app.logger.info(f"Download notification email sent for {nome} {cognome}")
+
+                    success, response = send_email_resend(
+                        to_email=app.config['MAIL_RECIPIENT'],
+                        subject='📥 Nuova Richiesta Download - Sistematica Commerciale',
+                        html_content=html_content
+                    )
+
+                    if success:
+                        print(f"[DOWNLOAD EMAIL] ✅ Email sent for {nome} {cognome}", flush=True)
+                    else:
+                        print(f"[DOWNLOAD EMAIL] ❌ Failed: {response}", flush=True)
             except Exception as e:
-                app.logger.error(f"Failed to send download notification email in background: {e}")
+                print(f"[DOWNLOAD EMAIL] ❌ Error: {e}", flush=True)
 
         # Avvia thread per invio email in background
         from threading import Thread
