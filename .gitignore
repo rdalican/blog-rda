@@ -61,3 +61,34 @@ package-lock.json
 *password*
 credentials.json
 token.json
+gmail_oauth2_config.json
+
+# File video e multimediali grandi
+Video per Sistematica Commerciale/
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+
+# Documenti di lavoro
+*.odt
+*.docx
+*.pptx
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.svg
+
+# Script di test
+test_*.js
+generate_*.js
+check_*.js
+create_token.js
+get_token.js
+interactive_*.js
+
+# Chiavi e configurazioni locali
+Chiave segreta*.txt
+.claude/

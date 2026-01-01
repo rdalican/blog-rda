@@ -58,10 +58,12 @@
     <div class="container">
         <div class="header">Nuovo Commento da Moderare</div>
         <p>Un nuovo commento è stato inviato sul blog e attende la tua approvazione.</p>
-        
+
         <div class="comment-box">
             <div class="comment-author">Da: {{ name }}</div>
-            <p>"{{ message_content }}"</p>
+            <div style="margin-bottom: 10px;"><strong>Email:</strong> {{ email }}</div>
+            <div style="margin-bottom: 10px;"><strong>Articolo:</strong> {{ post_title }}</div>
+            <p><strong>Commento:</strong><br>"{{ message_content }}"</p>
         </div>
 
         <div class="actions">

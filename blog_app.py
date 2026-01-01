@@ -140,18 +140,24 @@ def add_comment_route(post_slug):
 
     if success:
         flash('Il tuo commento è in fase di approvazione dal moderatore del sito.', 'success')
-        
+
+        # Ottieni il titolo del post per l'email
+        post_success, post_data = notion.get_post_by_slug(post_slug)
+        post_title = post_data.get('title', 'Articolo sconosciuto') if post_success else 'Articolo sconosciuto'
+
         # Invia email di moderazione
         try:
             approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
             delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
-            
+
             msg = Message(
-                'New Comment for Moderation',
+                '💬 Nuovo Commento da Moderare',
                 recipients=[app.config['MAIL_RECIPIENT']],
                 html=render_template(
                     'email/moderation_notification.html',
                     name=name,
+                    email=email,
+                    post_title=post_title,
                     message_content=message_content,
                     approve_url=approve_url,
                     delete_url=delete_url
@@ -250,9 +256,29 @@ def downloads():
             flash(f'Errore nel salvataggio dei dati: {message}', 'error')
             return render_template('downloads.html', download_ready=False)
 
+        # Invia email di notifica download
+        try:
+            data_ora = datetime.now().strftime('%d/%m/%Y alle %H:%M')
+
+            msg = Message(
+                '📥 Nuova Richiesta Download - Sistematica Commerciale',
+                recipients=[app.config['MAIL_RECIPIENT']],
+                html=render_template(
+                    'email/download_notification.html',
+                    nome=nome,
+                    cognome=cognome,
+                    email=email,
+                    data=data_ora
+                )
+            )
+            mail.send(msg)
+        except Exception as e:
+            app.logger.error(f"CRITICAL: Failed to send download notification email. Error: {e}")
+            # Non mostriamo l'errore all'utente, il download procede comunque
+
         # Mostra il link per il download
         return render_template('downloads.html', download_ready=True)
-            
+
     return render_template('downloads.html', download_ready=False)
 
 @app.route('/download_sistematica')
