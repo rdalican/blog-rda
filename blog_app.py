@@ -141,12 +141,18 @@ def add_comment_route(post_slug):
     if success:
         flash('Il tuo commento è in fase di approvazione dal moderatore del sito.', 'success')
 
-        # Ottieni il titolo del post per l'email
-        post_success, post_data = notion.get_post_by_slug(post_slug)
-        post_title = post_data.get('title', 'Articolo sconosciuto') if post_success else 'Articolo sconosciuto'
-
         # Invia email di moderazione
         try:
+            # Ottieni il titolo del post per l'email (con fallback sicuro)
+            post_title = 'Articolo sconosciuto'
+            try:
+                post_success, post_data = notion.get_post_by_slug(post_slug)
+                if post_success and post_data:
+                    post_title = post_data.get('title', f'Post {post_slug}')
+            except Exception as e_post:
+                app.logger.warning(f"Could not fetch post title for email: {e_post}")
+                post_title = f'Post {post_slug}'
+
             approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
             delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
 
@@ -166,7 +172,7 @@ def add_comment_route(post_slug):
             mail.send(msg)
         except Exception as e:
             app.logger.error(f"CRITICAL: Failed to send moderation email. Error: {e}")
-            flash('Your comment was saved, but a notification email could not be sent to the moderator. Please check the server logs.', 'warning')
+            # Non mostriamo l'errore all'utente, il commento è stato salvato comunque
     else:
         flash('There was an error submitting your comment.', 'error')
 
