@@ -141,38 +141,46 @@ def add_comment_route(post_slug):
     if success:
         flash('Il tuo commento è in fase di approvazione dal moderatore del sito.', 'success')
 
-        # Invia email di moderazione
-        try:
-            # Ottieni il titolo del post per l'email (con fallback sicuro)
-            post_title = 'Articolo sconosciuto'
+        # Invia email di moderazione in background (non bloccante)
+        def send_email_async():
             try:
-                post_success, post_data = notion.get_post_by_slug(post_slug)
-                if post_success and post_data:
-                    post_title = post_data.get('title', f'Post {post_slug}')
-            except Exception as e_post:
-                app.logger.warning(f"Could not fetch post title for email: {e_post}")
-                post_title = f'Post {post_slug}'
+                with app.app_context():
+                    # Ottieni il titolo del post per l'email (con fallback sicuro)
+                    post_title = 'Articolo sconosciuto'
+                    try:
+                        post_success, post_data = notion.get_post_by_slug(post_slug)
+                        if post_success and post_data:
+                            post_title = post_data.get('title', f'Post {post_slug}')
+                    except Exception as e_post:
+                        app.logger.warning(f"Could not fetch post title for email: {e_post}")
+                        post_title = f'Post {post_slug}'
 
-            approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
-            delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
+                    approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
+                    delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
 
-            msg = Message(
-                '💬 Nuovo Commento da Moderare',
-                recipients=[app.config['MAIL_RECIPIENT']],
-                html=render_template(
-                    'email/moderation_notification.html',
-                    name=name,
-                    email=email,
-                    post_title=post_title,
-                    message_content=message_content,
-                    approve_url=approve_url,
-                    delete_url=delete_url
-                )
-            )
-            mail.send(msg)
-        except Exception as e:
-            app.logger.error(f"CRITICAL: Failed to send moderation email. Error: {e}")
-            # Non mostriamo l'errore all'utente, il commento è stato salvato comunque
+                    msg = Message(
+                        '💬 Nuovo Commento da Moderare',
+                        recipients=[app.config['MAIL_RECIPIENT']],
+                        html=render_template(
+                            'email/moderation_notification.html',
+                            name=name,
+                            email=email,
+                            post_title=post_title,
+                            message_content=message_content,
+                            approve_url=approve_url,
+                            delete_url=delete_url
+                        )
+                    )
+                    mail.send(msg)
+                    app.logger.info(f"Email notification sent successfully for comment by {name}")
+            except Exception as e:
+                app.logger.error(f"Failed to send moderation email in background: {e}")
+
+        # Avvia thread per invio email in background
+        from threading import Thread
+        email_thread = Thread(target=send_email_async)
+        email_thread.daemon = True
+        email_thread.start()
     else:
         flash('There was an error submitting your comment.', 'error')
 
@@ -262,25 +270,33 @@ def downloads():
             flash(f'Errore nel salvataggio dei dati: {message}', 'error')
             return render_template('downloads.html', download_ready=False)
 
-        # Invia email di notifica download
-        try:
-            data_ora = datetime.now().strftime('%d/%m/%Y alle %H:%M')
+        # Invia email di notifica download in background (non bloccante)
+        def send_download_email_async():
+            try:
+                with app.app_context():
+                    data_ora = datetime.now().strftime('%d/%m/%Y alle %H:%M')
 
-            msg = Message(
-                '📥 Nuova Richiesta Download - Sistematica Commerciale',
-                recipients=[app.config['MAIL_RECIPIENT']],
-                html=render_template(
-                    'email/download_notification.html',
-                    nome=nome,
-                    cognome=cognome,
-                    email=email,
-                    data=data_ora
-                )
-            )
-            mail.send(msg)
-        except Exception as e:
-            app.logger.error(f"CRITICAL: Failed to send download notification email. Error: {e}")
-            # Non mostriamo l'errore all'utente, il download procede comunque
+                    msg = Message(
+                        '📥 Nuova Richiesta Download - Sistematica Commerciale',
+                        recipients=[app.config['MAIL_RECIPIENT']],
+                        html=render_template(
+                            'email/download_notification.html',
+                            nome=nome,
+                            cognome=cognome,
+                            email=email,
+                            data=data_ora
+                        )
+                    )
+                    mail.send(msg)
+                    app.logger.info(f"Download notification email sent for {nome} {cognome}")
+            except Exception as e:
+                app.logger.error(f"Failed to send download notification email in background: {e}")
+
+        # Avvia thread per invio email in background
+        from threading import Thread
+        email_thread = Thread(target=send_download_email_async)
+        email_thread.daemon = True
+        email_thread.start()
 
         # Mostra il link per il download
         return render_template('downloads.html', download_ready=True)
