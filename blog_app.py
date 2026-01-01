@@ -72,6 +72,26 @@ mail = Mail(app)
 # Resend Configuration
 resend.api_key = os.environ.get('RESEND_API_KEY')
 
+# Helper function to send email via Gmail SMTP
+def send_email_gmail(to_email, subject, html_content):
+    """Send email using Gmail SMTP via Flask-Mail"""
+    try:
+        from flask_mail import Message
+
+        msg = Message(
+            subject=subject,
+            recipients=[to_email],
+            html=html_content,
+            sender=app.config['MAIL_DEFAULT_SENDER']
+        )
+
+        mail.send(msg)
+        print(f"[GMAIL] Email sent successfully to {to_email}", flush=True)
+        return True, "Email sent via Gmail"
+    except Exception as e:
+        print(f"[GMAIL] Failed to send email: {e}", flush=True)
+        return False, str(e)
+
 # Helper function to send email via Resend
 def send_email_resend(to_email, subject, html_content):
     """Send email using Resend API"""
@@ -91,6 +111,19 @@ def send_email_resend(to_email, subject, html_content):
     except Exception as e:
         print(f"[RESEND] Failed to send email: {e}", flush=True)
         return False, str(e)
+
+# Unified email sending function with fallback
+def send_email(to_email, subject, html_content):
+    """Send email using available provider (Resend or Gmail SMTP)"""
+    # Try Resend first if API key is configured
+    if os.environ.get('RESEND_API_KEY'):
+        success, response = send_email_resend(to_email, subject, html_content)
+        if success:
+            return True, response
+        print(f"[EMAIL] Resend failed, trying Gmail SMTP fallback...", flush=True)
+
+    # Fallback to Gmail SMTP
+    return send_email_gmail(to_email, subject, html_content)
 
 # Notion Manager Initialization
 try:
@@ -198,8 +231,8 @@ def add_comment_route(post_slug):
                         delete_url=delete_url
                     )
 
-                    print(f"[EMAIL THREAD] Sending email via Resend to {app.config['MAIL_RECIPIENT']}...", flush=True)
-                    success, response = send_email_resend(
+                    print(f"[EMAIL THREAD] Sending email to {app.config['MAIL_RECIPIENT']}...", flush=True)
+                    success, response = send_email(
                         to_email=app.config['MAIL_RECIPIENT'],
                         subject='💬 Nuovo Commento da Moderare',
                         html_content=html_content
@@ -325,7 +358,7 @@ def downloads():
                         data=data_ora
                     )
 
-                    success, response = send_email_resend(
+                    success, response = send_email(
                         to_email=app.config['MAIL_RECIPIENT'],
                         subject='📥 Nuova Richiesta Download - Sistematica Commerciale',
                         html_content=html_content
