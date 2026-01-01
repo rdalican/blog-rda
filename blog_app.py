@@ -158,10 +158,11 @@ def add_comment_route(post_slug):
 
         # Invia email di moderazione in background (non bloccante)
         def send_email_async(name, email, post_title, message_content, approve_url, delete_url):
-            app.logger.info(f"[EMAIL THREAD] Starting email send for comment by {name}")
+            print(f"[EMAIL THREAD] Starting email send for comment by {name}", flush=True)
             try:
+                print(f"[EMAIL THREAD] Entering app context...", flush=True)
                 with app.app_context():
-                    app.logger.info(f"[EMAIL THREAD] Creating email message...")
+                    print(f"[EMAIL THREAD] Creating email message...", flush=True)
                     msg = Message(
                         '💬 Nuovo Commento da Moderare',
                         recipients=[app.config['MAIL_RECIPIENT']],
@@ -175,13 +176,13 @@ def add_comment_route(post_slug):
                             delete_url=delete_url
                         )
                     )
-                    app.logger.info(f"[EMAIL THREAD] Sending email to {app.config['MAIL_RECIPIENT']}...")
+                    print(f"[EMAIL THREAD] Sending email to {app.config['MAIL_RECIPIENT']}...", flush=True)
                     mail.send(msg)
-                    app.logger.info(f"[EMAIL THREAD] ✅ Email sent successfully for comment by {name}")
+                    print(f"[EMAIL THREAD] ✅ Email sent successfully for comment by {name}", flush=True)
             except Exception as e:
-                app.logger.error(f"[EMAIL THREAD] ❌ Failed to send email: {e}")
+                print(f"[EMAIL THREAD] ❌ Failed to send email: {e}", flush=True)
                 import traceback
-                app.logger.error(f"[EMAIL THREAD] Full traceback: {traceback.format_exc()}")
+                print(f"[EMAIL THREAD] Full traceback: {traceback.format_exc()}", flush=True)
 
         # Avvia thread per invio email in background
         print(f"[MAIN] About to start email thread for comment by {name}", flush=True)
