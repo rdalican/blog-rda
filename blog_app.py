@@ -260,7 +260,7 @@ def download_sistematica():
     try:
         return send_from_directory(
             directory=os.path.join(app.root_path, 'static', 'files'),
-            path='Sistematica Commerciale.zip',  # <-- Nome del file sul server PythonAnywhere
+            path='Sistematica_Commerciale_dist.zip',
             as_attachment=True
         )
     except FileNotFoundError:
