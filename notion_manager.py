@@ -773,9 +773,25 @@ class NotionManager:
 
             for img in images:
                 src = img.get('src')
-                if src and src.startswith('/'):
-                    # Convert relative URL to absolute URL
+                if not src:
+                    continue
+
+                # Skip if already absolute URL (http:// or https://)
+                if src.startswith(('http://', 'https://')):
+                    continue
+
+                # Handle relative paths starting with /
+                if src.startswith('/'):
                     img['src'] = f"{base_url}{src}"
+                # Handle relative paths with ../ or ./
+                elif src.startswith(('../', './')):
+                    # Extract the filename and assume it's in /static/images/
+                    filename = src.split('/')[-1]
+                    img['src'] = f"{base_url}/static/images/{filename}"
+                # Handle other relative paths (no leading /)
+                elif not src.startswith('/'):
+                    # Assume it's in /static/images/
+                    img['src'] = f"{base_url}/static/images/{src}"
 
             return str(soup)
         except Exception as e:
