@@ -1,8 +1,0 @@
-[build]
-builder = "nixpacks"
-buildCommand = "pip install -r requirements.txt"
-
-[deploy]
-startCommand = "gunicorn --timeout 120 blog_app:app"
-restartPolicyType = "on-failure"
-restartPolicyMaxRetries = 10
