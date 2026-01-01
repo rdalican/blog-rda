@@ -158,8 +158,10 @@ def add_comment_route(post_slug):
 
         # Invia email di moderazione in background (non bloccante)
         def send_email_async(name, email, post_title, message_content, approve_url, delete_url):
+            app.logger.info(f"[EMAIL THREAD] Starting email send for comment by {name}")
             try:
                 with app.app_context():
+                    app.logger.info(f"[EMAIL THREAD] Creating email message...")
                     msg = Message(
                         '💬 Nuovo Commento da Moderare',
                         recipients=[app.config['MAIL_RECIPIENT']],
@@ -173,10 +175,13 @@ def add_comment_route(post_slug):
                             delete_url=delete_url
                         )
                     )
+                    app.logger.info(f"[EMAIL THREAD] Sending email to {app.config['MAIL_RECIPIENT']}...")
                     mail.send(msg)
-                    app.logger.info(f"Email notification sent successfully for comment by {name}")
+                    app.logger.info(f"[EMAIL THREAD] ✅ Email sent successfully for comment by {name}")
             except Exception as e:
-                app.logger.error(f"Failed to send moderation email in background: {e}")
+                app.logger.error(f"[EMAIL THREAD] ❌ Failed to send email: {e}")
+                import traceback
+                app.logger.error(f"[EMAIL THREAD] Full traceback: {traceback.format_exc()}")
 
         # Avvia thread per invio email in background
         from threading import Thread
