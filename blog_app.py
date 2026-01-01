@@ -141,9 +141,10 @@ def add_comment_route(post_slug):
     if success:
         flash('Il tuo commento è in fase di approvazione dal moderatore del sito.', 'success')
 
-        # Genera gli URL mentre siamo ancora nel contesto della richiesta
-        approve_url = url_for('approve_comment', token=data['approve_token'], _external=True)
-        delete_url = url_for('delete_comment', token=data['delete_token'], _external=True)
+        # Genera gli URL manualmente usando PUBLIC_URL per evitare problemi di contesto
+        base_url = os.environ.get('PUBLIC_URL', 'https://blog-rda-production.up.railway.app')
+        approve_url = f"{base_url}/approve/{data['approve_token']}"
+        delete_url = f"{base_url}/delete/{data['delete_token']}"
 
         # Ottieni il titolo del post
         post_title = 'Articolo sconosciuto'
