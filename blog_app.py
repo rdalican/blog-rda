@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from notion_manager import NotionManager
 from bs4 import BeautifulSoup
 import resend
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail as SendGridMail
 
 # Load environment variables from .env files
 # Construct the full path to the .env files
@@ -92,6 +94,28 @@ def send_email_gmail(to_email, subject, html_content):
         print(f"[GMAIL] Failed to send email: {e}", flush=True)
         return False, str(e)
 
+# Helper function to send email via SendGrid
+def send_email_sendgrid(to_email, subject, html_content):
+    """Send email using SendGrid API"""
+    try:
+        from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'roberto.dalicandro@gmail.com')
+
+        message = SendGridMail(
+            from_email=from_email,
+            to_emails=to_email,
+            subject=subject,
+            html_content=html_content
+        )
+
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+
+        print(f"[SENDGRID] Email sent successfully. Status: {response.status_code}", flush=True)
+        return True, f"SendGrid status {response.status_code}"
+    except Exception as e:
+        print(f"[SENDGRID] Failed to send email: {e}", flush=True)
+        return False, str(e)
+
 # Helper function to send email via Resend
 def send_email_resend(to_email, subject, html_content):
     """Send email using Resend API"""
@@ -114,15 +138,22 @@ def send_email_resend(to_email, subject, html_content):
 
 # Unified email sending function with fallback
 def send_email(to_email, subject, html_content):
-    """Send email using available provider (Resend or Gmail SMTP)"""
-    # Try Resend first if API key is configured
+    """Send email using available provider (SendGrid -> Resend -> Gmail SMTP)"""
+    # Try SendGrid first if API key is configured
+    if os.environ.get('SENDGRID_API_KEY'):
+        success, response = send_email_sendgrid(to_email, subject, html_content)
+        if success:
+            return True, response
+        print(f"[EMAIL] SendGrid failed, trying next provider...", flush=True)
+
+    # Try Resend if API key is configured
     if os.environ.get('RESEND_API_KEY'):
         success, response = send_email_resend(to_email, subject, html_content)
         if success:
             return True, response
         print(f"[EMAIL] Resend failed, trying Gmail SMTP fallback...", flush=True)
 
-    # Fallback to Gmail SMTP
+    # Final fallback to Gmail SMTP
     return send_email_gmail(to_email, subject, html_content)
 
 # Notion Manager Initialization

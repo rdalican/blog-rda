@@ -7,6 +7,7 @@ Flask-Mail==0.9.1
 
 # Email Service
 resend==0.8.0
+sendgrid==6.11.0
 
 # Notion Integration
 notion-client==2.2.1
