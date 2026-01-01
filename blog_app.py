@@ -184,10 +184,13 @@ def add_comment_route(post_slug):
                 app.logger.error(f"[EMAIL THREAD] Full traceback: {traceback.format_exc()}")
 
         # Avvia thread per invio email in background
+        app.logger.info(f"[MAIN] About to start email thread for comment by {name}")
         from threading import Thread
         email_thread = Thread(target=send_email_async, args=(name, email, post_title, message_content, approve_url, delete_url))
         email_thread.daemon = True
+        app.logger.info(f"[MAIN] Starting email thread...")
         email_thread.start()
+        app.logger.info(f"[MAIN] Email thread started successfully")
     else:
         flash('There was an error submitting your comment.', 'error')
 
