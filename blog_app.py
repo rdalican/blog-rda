@@ -276,6 +276,18 @@ def add_comment_route(post_slug):
     if success:
         flash('Il tuo commento è in fase di approvazione dal moderatore del sito.', 'success')
 
+        # Auto-add to newsletter in background
+        def add_comment_to_newsletter_async():
+            try:
+                auto_add_to_newsletter(name, email, "Commento")
+            except Exception as e:
+                print(f"[NEWSLETTER AUTO] Error in thread: {e}", flush=True)
+
+        from threading import Thread
+        newsletter_thread = Thread(target=add_comment_to_newsletter_async)
+        newsletter_thread.daemon = True
+        newsletter_thread.start()
+
         # Genera gli URL manualmente usando PUBLIC_URL per evitare problemi di contesto
         base_url = os.environ.get('PUBLIC_URL', 'https://blog-rda-production.up.railway.app')
         approve_url = f"{base_url}/approve/{data['approve_token']}"
@@ -420,6 +432,18 @@ def downloads():
         if not success:
             flash(f'Errore nel salvataggio dei dati: {message}', 'error')
             return render_template('downloads.html', download_ready=False)
+
+        # Auto-add to newsletter in background
+        def add_to_newsletter_async():
+            try:
+                auto_add_to_newsletter(f"{nome} {cognome}", email, "Download")
+            except Exception as e:
+                print(f"[NEWSLETTER AUTO] Error in thread: {e}", flush=True)
+
+        from threading import Thread
+        newsletter_thread = Thread(target=add_to_newsletter_async)
+        newsletter_thread.daemon = True
+        newsletter_thread.start()
 
         # Invia email di notifica download in background (non bloccante)
         def send_download_email_async():
@@ -788,6 +812,56 @@ def get_newsletter_stats():
         'active': active,
         'from_form': from_form
     }
+
+def auto_add_to_newsletter(name, email, source):
+    """
+    Automatically add email to newsletter if not already present
+    source: 'Download' or 'Commento'
+    """
+    try:
+        from notion_client import Client
+
+        newsletter_db_id = os.environ.get('NOTION_NEWSLETTER_DB_ID')
+        if not newsletter_db_id:
+            print(f"[NEWSLETTER AUTO] NOTION_NEWSLETTER_DB_ID not configured", flush=True)
+            return False
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        # Check if email already exists
+        existing = notion_client.databases.query(
+            database_id=newsletter_db_id,
+            filter={
+                "property": "Email",
+                "email": {
+                    "equals": email
+                }
+            }
+        )
+
+        if existing.get('results'):
+            # Email already in database, don't add duplicate
+            print(f"[NEWSLETTER AUTO] Email {email} already exists in newsletter", flush=True)
+            return False
+
+        # Add new subscriber
+        notion_client.pages.create(
+            parent={"database_id": newsletter_db_id},
+            properties={
+                "Email": {"email": email},
+                "Nome": {"rich_text": [{"text": {"content": name}}]},
+                "Fonte": {"select": {"name": source}},
+                "Data Iscrizione": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
+                "Attivo": {"checkbox": True}
+            }
+        )
+
+        print(f"[NEWSLETTER AUTO] Added {email} from {source}", flush=True)
+        return True
+
+    except Exception as e:
+        print(f"[NEWSLETTER AUTO] Error adding {email}: {e}", flush=True)
+        return False
 
 @app.route('/admin')
 @app.route('/admin/dashboard')
