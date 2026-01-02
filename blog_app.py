@@ -470,7 +470,82 @@ def download_sistematica():
     except FileNotFoundError:
         flash('ERRORE CRITICO: Il file per il download non è stato trovato sul server. Contattare il supporto.', 'error')
         return redirect(url_for('downloads'))
-    
+
+@app.route('/newsletter/subscribe', methods=['POST'])
+def newsletter_subscribe():
+    """Handle newsletter subscription requests"""
+    try:
+        from notion_client import Client
+        import json
+
+        # Get data from request
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+
+        if not name or not email:
+            return json.dumps({'success': False, 'message': 'Nome e email sono obbligatori.'}), 400
+
+        # Validate email format
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            return json.dumps({'success': False, 'message': 'Formato email non valido.'}), 400
+
+        newsletter_db_id = os.environ.get('NOTION_NEWSLETTER_DB_ID')
+        if not newsletter_db_id:
+            print("[NEWSLETTER] NOTION_NEWSLETTER_DB_ID not configured", flush=True)
+            return json.dumps({'success': False, 'message': 'Servizio non disponibile.'}), 500
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        # Check if email already exists
+        existing = notion_client.databases.query(
+            database_id=newsletter_db_id,
+            filter={
+                "property": "Email",
+                "email": {
+                    "equals": email
+                }
+            }
+        )
+
+        if existing.get('results'):
+            # Check if the subscription is still active
+            is_active = existing['results'][0]['properties'].get('Attivo', {}).get('checkbox', False)
+            if is_active:
+                return json.dumps({'success': False, 'message': 'Questa email è già iscritta alla newsletter.'}), 400
+            else:
+                # Reactivate the subscription
+                page_id = existing['results'][0]['id']
+                notion_client.pages.update(
+                    page_id=page_id,
+                    properties={
+                        "Nome": {"rich_text": [{"text": {"content": name}}]},
+                        "Attivo": {"checkbox": True},
+                        "Data Iscrizione": {"date": {"start": datetime.now(timezone.utc).isoformat()}}
+                    }
+                )
+                print(f"[NEWSLETTER] Reactivated subscription for {email}", flush=True)
+                return json.dumps({'success': True, 'message': 'Iscrizione riattivata con successo!'}), 200
+
+        # Create new subscription
+        notion_client.pages.create(
+            parent={"database_id": newsletter_db_id},
+            properties={
+                "Email": {"email": email},
+                "Nome": {"rich_text": [{"text": {"content": name}}]},
+                "Fonte": {"select": {"name": "Form"}},
+                "Data Iscrizione": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
+                "Attivo": {"checkbox": True}
+            }
+        )
+
+        print(f"[NEWSLETTER] New subscription: {name} ({email})", flush=True)
+        return json.dumps({'success': True, 'message': 'Iscrizione completata con successo!'}), 200
+
+    except Exception as e:
+        print(f"[NEWSLETTER] Error: {e}", flush=True)
+        return json.dumps({'success': False, 'message': 'Si è verificato un errore. Riprova più tardi.'}), 500
+
 @app.route('/debug_list_files')
 def debug_list_files():
     print("DEBUG: /debug_list_files route called", flush=True)

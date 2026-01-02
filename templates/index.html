@@ -120,11 +120,125 @@
     <footer class="bg-blue-900 text-white text-center p-10">
         <h2 class="text-3xl font-bold mb-4">È il Momento di Investire nell'Esperienza.</h2>
         <p class="max-w-2xl mx-auto mb-6 opacity-80">Il progetto "Anziano? No, Risorsa!" non è un'iniziativa sociale, ma una strategia di mercato per sbloccare il valore di un asset dormiente. È il momento di attivare l'esercito delle risorse.</p>
-        <button onclick="alert('Tornaci a trovare presto. Abbiamo grandi novità in preparazione!')" class="bg-amber-500 text-blue-900 font-bold py-3 px-8 rounded-full hover:bg-amber-400 transition-colors text-lg">Scopri Come Partecipare</button>
+        <button onclick="openNewsletterModal()" class="bg-amber-500 text-blue-900 font-bold py-3 px-8 rounded-full hover:bg-amber-400 transition-colors text-lg">Iscriviti alla Newsletter</button>
     </footer>
+
+    <!-- Newsletter Modal -->
+    <div id="newsletterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-blue-900">Iscriviti alla Newsletter</h3>
+                <button onclick="closeNewsletterModal()" class="text-gray-500 hover:text-gray-700 text-3xl">&times;</button>
+            </div>
+
+            <p class="text-gray-600 mb-6">Resta aggiornato sulle novità del progetto e ricevi contenuti esclusivi.</p>
+
+            <form id="newsletterForm" onsubmit="submitNewsletter(event)">
+                <div class="mb-4">
+                    <label for="newsletter_name" class="block text-gray-700 font-semibold mb-2">Nome *</label>
+                    <input type="text" id="newsletter_name" name="name" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Il tuo nome">
+                </div>
+
+                <div class="mb-6">
+                    <label for="newsletter_email" class="block text-gray-700 font-semibold mb-2">Email *</label>
+                    <input type="email" id="newsletter_email" name="email" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="la.tua@email.com">
+                </div>
+
+                <div id="newsletter_message" class="mb-4 p-3 rounded-lg hidden"></div>
+
+                <button type="submit" id="newsletter_submit"
+                        class="w-full bg-blue-900 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-800 transition-colors">
+                    Iscriviti
+                </button>
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
+    <script>
+        // Newsletter Modal Functions
+        function openNewsletterModal() {
+            document.getElementById('newsletterModal').classList.remove('hidden');
+            document.getElementById('newsletterModal').classList.add('flex');
+            document.getElementById('newsletter_name').value = '';
+            document.getElementById('newsletter_email').value = '';
+            document.getElementById('newsletter_message').classList.add('hidden');
+        }
+
+        function closeNewsletterModal() {
+            document.getElementById('newsletterModal').classList.add('hidden');
+            document.getElementById('newsletterModal').classList.remove('flex');
+        }
+
+        function submitNewsletter(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('newsletter_submit');
+            const messageDiv = document.getElementById('newsletter_message');
+            const name = document.getElementById('newsletter_name').value.trim();
+            const email = document.getElementById('newsletter_email').value.trim();
+
+            if (!name || !email) {
+                showNewsletterMessage('Per favore, compila tutti i campi.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Invio in corso...';
+
+            fetch('/newsletter/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name, email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNewsletterMessage('Grazie! Iscrizione completata con successo.', 'success');
+                    setTimeout(() => {
+                        closeNewsletterModal();
+                    }, 2000);
+                } else {
+                    showNewsletterMessage(data.message || 'Si è verificato un errore. Riprova.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNewsletterMessage('Si è verificato un errore. Riprova più tardi.', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Iscriviti';
+            });
+        }
+
+        function showNewsletterMessage(message, type) {
+            const messageDiv = document.getElementById('newsletter_message');
+            messageDiv.textContent = message;
+            messageDiv.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+
+            if (type === 'success') {
+                messageDiv.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                messageDiv.classList.add('bg-red-100', 'text-red-700');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('newsletterModal');
+            if (event.target === modal) {
+                closeNewsletterModal();
+            }
+        });
+    </script>
     <script>
         const wrapLabel = (label) => {
             const maxLen = 16;
