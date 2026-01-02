@@ -71,6 +71,9 @@
                     <button onclick="showTab('posts')" id="tab-posts" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-6 font-medium">
                         Gestione Post
                     </button>
+                    <button onclick="showTab('newsletter')" id="tab-newsletter" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-6 font-medium">
+                        Newsletter
+                    </button>
                 </nav>
             </div>
 
@@ -238,6 +241,76 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Newsletter Tab -->
+            <div id="content-newsletter" class="tab-content p-6 hidden">
+                <h2 class="text-2xl font-bold mb-4">Newsletter - Iscritti</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                        <div class="text-sm text-blue-600 font-medium">Iscritti Totali</div>
+                        <div class="text-2xl font-bold text-blue-900">{{ newsletter_stats.total }}</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                        <div class="text-sm text-green-600 font-medium">Attivi</div>
+                        <div class="text-2xl font-bold text-green-900">{{ newsletter_stats.active }}</div>
+                    </div>
+                    <div class="bg-amber-50 rounded-lg p-4 border-l-4 border-amber-500">
+                        <div class="text-sm text-amber-600 font-medium">Da Form</div>
+                        <div class="text-2xl font-bold text-amber-900">{{ newsletter_stats.from_form }}</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Nome</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Fonte</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Data Iscrizione</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for subscriber in newsletter_subscribers %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ subscriber.name }}</td>
+                                <td class="px-4 py-3">{{ subscriber.email }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium
+                                        {% if subscriber.source == 'Form' %}bg-blue-100 text-blue-800
+                                        {% elif subscriber.source == 'Download' %}bg-green-100 text-green-800
+                                        {% elif subscriber.source == 'Commento' %}bg-purple-100 text-purple-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ subscriber.source }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ subscriber.date[:10] if subscriber.date else 'N/A' }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium
+                                        {% if subscriber.active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ 'Attivo' if subscriber.active else 'Disattivato' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-10 text-gray-500">Nessun iscritto trovato</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if newsletter_subscribers %}
+                <div class="mt-4">
+                    <button onclick="exportNewsletterEmails()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        Esporta Email CSV
+                    </button>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -266,18 +339,37 @@
 
         // Export downloads to CSV
         function exportDownloads() {
-            const downloads = {{ downloads|tojson }};
-            let csv = 'Nome,Cognome,Email,Data\n';
+            var downloads = {{ downloads|tojson|safe }};
+            var csv = 'Nome,Cognome,Email,Data\n';
 
-            downloads.forEach(d => {
-                csv += `"${d.nome}","${d.cognome}","${d.email}","${d.timestamp}"\n`;
+            downloads.forEach(function(d) {
+                csv += '"' + d.nome + '","' + d.cognome + '","' + d.email + '","' + d.timestamp + '"\n';
             });
 
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
             a.download = 'downloads_software.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Export newsletter emails to CSV
+        function exportNewsletterEmails() {
+            var subscribers = {{ newsletter_subscribers|tojson|safe }};
+            var csv = 'Nome,Email,Fonte,Data Iscrizione,Stato\n';
+
+            subscribers.forEach(function(s) {
+                var status = s.active ? 'Attivo' : 'Disattivato';
+                csv += '"' + s.name + '","' + s.email + '","' + s.source + '","' + (s.date || 'N/A') + '","' + status + '"\n';
+            });
+
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'newsletter_iscritti.csv';
             a.click();
             window.URL.revokeObjectURL(url);
         }

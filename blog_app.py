@@ -734,6 +734,61 @@ def get_downloads_data():
         print(f"[ADMIN] Error getting downloads: {e}", flush=True)
         return []
 
+def get_newsletter_data():
+    """Get newsletter subscribers from Notion"""
+    try:
+        from notion_client import Client
+
+        newsletter_db_id = os.environ.get('NOTION_NEWSLETTER_DB_ID')
+        if not newsletter_db_id:
+            return []
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        results = notion_client.databases.query(
+            database_id=newsletter_db_id,
+            sorts=[{"timestamp": "created_time", "direction": "descending"}],
+            page_size=100
+        )
+
+        subscribers = []
+        for entry in results.get('results', []):
+            props = entry['properties']
+
+            nome_prop = props.get('Nome', {}).get('rich_text', [])
+            email_prop = props.get('Email', {}).get('email', '')
+            fonte_prop = props.get('Fonte', {}).get('select', {})
+            data_prop = props.get('Data Iscrizione', {}).get('date', {})
+            attivo_prop = props.get('Attivo', {}).get('checkbox', False)
+
+            subscribers.append({
+                'name': nome_prop[0].get('text', {}).get('content', '') if nome_prop else 'N/A',
+                'email': email_prop or 'N/A',
+                'source': fonte_prop.get('name', 'N/A') if fonte_prop else 'N/A',
+                'date': data_prop.get('start', 'N/A') if data_prop else 'N/A',
+                'active': attivo_prop
+            })
+
+        return subscribers
+
+    except Exception as e:
+        print(f"[ADMIN] Error getting newsletter data: {e}", flush=True)
+        return []
+
+def get_newsletter_stats():
+    """Get newsletter statistics"""
+    subscribers = get_newsletter_data()
+
+    total = len(subscribers)
+    active = sum(1 for s in subscribers if s['active'])
+    from_form = sum(1 for s in subscribers if s['source'] == 'Form')
+
+    return {
+        'total': total,
+        'active': active,
+        'from_form': from_form
+    }
+
 @app.route('/admin')
 @app.route('/admin/dashboard')
 def admin_dashboard():
@@ -755,11 +810,17 @@ def admin_dashboard():
     # Get downloads data
     downloads_data = get_downloads_data()
 
+    # Get newsletter data
+    newsletter_subscribers = get_newsletter_data()
+    newsletter_stats = get_newsletter_stats()
+
     return render_template('admin_dashboard.html',
                          posts=posts,
                          analytics=analytics_stats,
                          comments=comments_data,
-                         downloads=downloads_data)
+                         downloads=downloads_data,
+                         newsletter_subscribers=newsletter_subscribers,
+                         newsletter_stats=newsletter_stats)
 
 @app.route('/admin/post/new', methods=['GET', 'POST'])
 def admin_new_post():
