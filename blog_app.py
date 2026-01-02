@@ -163,6 +163,52 @@ except Exception as e:
     print(f"Error initializing Notion Manager: {e}")
     notion = None
 
+# --- Analytics Tracking Middleware ---
+@app.before_request
+def track_visit():
+    """Track page visits to Notion Analytics database"""
+    # Skip tracking for static files and admin routes
+    if request.path.startswith('/static') or request.path.startswith('/admin'):
+        return
+
+    # Track visit asynchronously to not block the request
+    def log_visit_async():
+        try:
+            from notion_client import Client
+            from datetime import datetime
+
+            analytics_db_id = os.environ.get('NOTION_ANALYTICS_DB_ID')
+            if not analytics_db_id:
+                return
+
+            notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+            # Get visitor info
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+            user_agent = request.headers.get('User-Agent', 'Unknown')
+            referrer = request.headers.get('Referer', 'Direct')
+            page = request.path
+
+            # Create new analytics entry
+            notion_client.pages.create(
+                parent={"database_id": analytics_db_id},
+                properties={
+                    "Timestamp": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
+                    "Page": {"title": [{"text": {"content": page}}]},
+                    "IP Address": {"rich_text": [{"text": {"content": ip_address[:100]}}]},
+                    "User Agent": {"rich_text": [{"text": {"content": user_agent[:2000]}}]},
+                    "Referrer": {"rich_text": [{"text": {"content": referrer[:2000]}}]}
+                }
+            )
+        except Exception as e:
+            print(f"[ANALYTICS] Failed to log visit: {e}", flush=True)
+
+    # Run in background thread
+    from threading import Thread
+    thread = Thread(target=log_visit_async)
+    thread.daemon = True
+    thread.start()
+
 # --- Template Filters and Context Processors ---
 @app.template_filter('regex_replace')
 def regex_replace(s, find, replace=''):
@@ -455,17 +501,190 @@ def logout():
     session.pop('is_admin', None)
     return redirect(url_for('index'))
 
+# --- Admin Helper Functions ---
+def get_analytics_stats():
+    """Get analytics statistics from Notion"""
+    try:
+        from notion_client import Client
+        from collections import Counter
+
+        analytics_db_id = os.environ.get('NOTION_ANALYTICS_DB_ID')
+        if not analytics_db_id:
+            return {
+                'total_visits': 0,
+                'unique_visitors': 0,
+                'top_pages': [],
+                'recent_visits': []
+            }
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        # Query all analytics entries
+        results = notion_client.databases.query(
+            database_id=analytics_db_id,
+            sorts=[{"timestamp": "created_time", "direction": "descending"}],
+            page_size=100
+        )
+
+        visits = results.get('results', [])
+        total_visits = len(visits)
+
+        # Count unique IPs
+        ips = set()
+        pages = []
+        recent = []
+
+        for visit in visits:
+            props = visit['properties']
+
+            # Extract IP
+            ip_prop = props.get('IP Address', {}).get('rich_text', [])
+            if ip_prop:
+                ip = ip_prop[0].get('text', {}).get('content', '')
+                if ip:
+                    ips.add(ip)
+
+            # Extract Page
+            page_prop = props.get('Page', {}).get('title', [])
+            if page_prop:
+                page = page_prop[0].get('text', {}).get('content', '')
+                if page:
+                    pages.append(page)
+
+            # Recent visits (first 10)
+            if len(recent) < 10:
+                recent.append({
+                    'page': page_prop[0].get('text', {}).get('content', '') if page_prop else 'N/A',
+                    'timestamp': visit.get('created_time', 'N/A'),
+                    'ip': ip_prop[0].get('text', {}).get('content', 'N/A') if ip_prop else 'N/A'
+                })
+
+        # Count page visits
+        page_counts = Counter(pages)
+        top_pages = [{'page': page, 'count': count} for page, count in page_counts.most_common(10)]
+
+        return {
+            'total_visits': total_visits,
+            'unique_visitors': len(ips),
+            'top_pages': top_pages,
+            'recent_visits': recent
+        }
+
+    except Exception as e:
+        print(f"[ADMIN] Error getting analytics: {e}", flush=True)
+        return {
+            'total_visits': 0,
+            'unique_visitors': 0,
+            'top_pages': [],
+            'recent_visits': []
+        }
+
+def get_comments_data():
+    """Get comments data from Notion"""
+    try:
+        from notion_client import Client
+
+        comments_db_id = os.environ.get('NOTION_COMMENTS_DB_ID')
+        if not comments_db_id:
+            return []
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        results = notion_client.databases.query(
+            database_id=comments_db_id,
+            sorts=[{"timestamp": "created_time", "direction": "descending"}],
+            page_size=50
+        )
+
+        comments = []
+        for entry in results.get('results', []):
+            props = entry['properties']
+
+            name_prop = props.get('Nome', {}).get('title', [])
+            email_prop = props.get('Email', {}).get('email', '')
+            message_prop = props.get('Messaggio', {}).get('rich_text', [])
+            post_prop = props.get('Post', {}).get('rich_text', [])
+            status_prop = props.get('Stato', {}).get('select', {})
+
+            comments.append({
+                'name': name_prop[0].get('text', {}).get('content', 'N/A') if name_prop else 'N/A',
+                'email': email_prop or 'N/A',
+                'message': message_prop[0].get('text', {}).get('content', '') if message_prop else '',
+                'post': post_prop[0].get('text', {}).get('content', 'N/A') if post_prop else 'N/A',
+                'status': status_prop.get('name', 'N/A'),
+                'timestamp': entry.get('created_time', 'N/A')
+            })
+
+        return comments
+
+    except Exception as e:
+        print(f"[ADMIN] Error getting comments: {e}", flush=True)
+        return []
+
+def get_downloads_data():
+    """Get downloads data from Notion"""
+    try:
+        from notion_client import Client
+
+        downloads_db_id = os.environ.get('NOTION_DOWNLOAD_DB_ID')
+        if not downloads_db_id:
+            return []
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        results = notion_client.databases.query(
+            database_id=downloads_db_id,
+            sorts=[{"timestamp": "created_time", "direction": "descending"}],
+            page_size=100
+        )
+
+        downloads = []
+        for entry in results.get('results', []):
+            props = entry['properties']
+
+            nome_prop = props.get('Nome', {}).get('title', [])
+            cognome_prop = props.get('Cognome', {}).get('rich_text', [])
+            email_prop = props.get('Email', {}).get('email', '')
+
+            downloads.append({
+                'nome': nome_prop[0].get('text', {}).get('content', '') if nome_prop else '',
+                'cognome': cognome_prop[0].get('text', {}).get('content', '') if cognome_prop else '',
+                'email': email_prop or 'N/A',
+                'timestamp': entry.get('created_time', 'N/A')
+            })
+
+        return downloads
+
+    except Exception as e:
+        print(f"[ADMIN] Error getting downloads: {e}", flush=True)
+        return []
+
+@app.route('/admin')
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if not is_admin():
         return redirect(url_for('login'))
-    
+
+    # Get blog posts
     success, posts = notion.get_blog_posts()
     if not success:
         flash('Could not retrieve blog posts.', 'error')
         posts = []
-        
-    return render_template('admin_dashboard.html', posts=posts)
+
+    # Get analytics data
+    analytics_stats = get_analytics_stats()
+
+    # Get comments data
+    comments_data = get_comments_data()
+
+    # Get downloads data
+    downloads_data = get_downloads_data()
+
+    return render_template('admin_dashboard.html',
+                         posts=posts,
+                         analytics=analytics_stats,
+                         comments=comments_data,
+                         downloads=downloads_data)
 
 @app.route('/admin/post/new', methods=['GET', 'POST'])
 def admin_new_post():

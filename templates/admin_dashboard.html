@@ -3,59 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Admin Dashboard - Blog RdA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto p-8">
+        <!-- Header -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Dashboard Post</h1>
-            <a href="{{ url_for('admin_new_post') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                + Nuovo Post
-            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Dashboard Amministrazione</h1>
+                <p class="text-gray-600">Benvenuto nella dashboard di gestione del blog</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{{ url_for('index') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Vai al Sito
+                </a>
+                <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    Logout
+                </a>
+            </div>
         </div>
-        
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="bg-{{ 'green' if category == 'success' else 'red' }}-100 border-l-4 border-{{ 'green' if category == 'success' else 'red' }}-500 text-{{ 'green' if category == 'success' else 'red' }}-700 p-4 mb-4" role="alert">
+                    <div class="bg-{{ 'green' if category == 'success' else 'red' }}-100 border-l-4 border-{{ 'green' if category == 'success' else 'red' }}-500 text-{{ 'green' if category == 'success' else 'red' }}-700 p-4 mb-4 rounded" role="alert">
                         <p>{{ message }}</p>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <div class="bg-white shadow-md rounded my-6">
-            <table class="min-w-full table-auto">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">Titolo</th>
-                        <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">Data Pubblicazione</th>
-                        <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">Azioni</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white">
-                    {% for post in posts %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="{{ url_for('post', post_slug=post.post_id) }}" target="_blank" class="text-blue-600 hover:underline">{{ post.title }}</a>
-                        </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{ post.date[:10] }}</td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="{{ url_for('admin_edit_post', post_id=post.id) }}" class="text-indigo-600 hover:text-indigo-900 mr-4">Modifica</a>
-                            <form action="{{ url_for('admin_delete_post', post_id=post.id) }}" method="post" class="inline-block" onsubmit="return confirm('Sei sicuro di voler eliminare questo post?');">
-                                <button type="submit" class="text-red-600 hover:text-red-900">Elimina</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center py-10">Nessun post trovato.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Visite Totali</div>
+                <div class="text-3xl font-bold text-blue-600">{{ analytics.total_visits }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Visitatori Unici</div>
+                <div class="text-3xl font-bold text-green-600">{{ analytics.unique_visitors }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Commenti</div>
+                <div class="text-3xl font-bold text-purple-600">{{ comments|length }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Download Software</div>
+                <div class="text-3xl font-bold text-orange-600">{{ downloads|length }}</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button onclick="showTab('analytics')" id="tab-analytics" class="tab-button border-b-2 border-blue-500 text-blue-600 py-4 px-6 font-medium">
+                        Statistiche
+                    </button>
+                    <button onclick="showTab('comments')" id="tab-comments" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-6 font-medium">
+                        Commenti
+                    </button>
+                    <button onclick="showTab('downloads')" id="tab-downloads" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-6 font-medium">
+                        Download
+                    </button>
+                    <button onclick="showTab('posts')" id="tab-posts" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-6 font-medium">
+                        Gestione Post
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="content-analytics" class="tab-content p-6">
+                <h2 class="text-2xl font-bold mb-4">Statistiche Visite</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Top Pages -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Pagine Più Visitate</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            {% if analytics.top_pages %}
+                                {% for page_data in analytics.top_pages %}
+                                <div class="flex justify-between items-center py-2 border-b last:border-0">
+                                    <span class="text-gray-700">{{ page_data.page }}</span>
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{{ page_data.count }} visite</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-gray-500">Nessun dato disponibile</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Recent Visits -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Visite Recenti</h3>
+                        <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                            {% if analytics.recent_visits %}
+                                {% for visit in analytics.recent_visits %}
+                                <div class="py-2 border-b last:border-0">
+                                    <div class="font-medium text-gray-800">{{ visit.page }}</div>
+                                    <div class="text-sm text-gray-600">IP: {{ visit.ip }}</div>
+                                    <div class="text-xs text-gray-500">{{ visit.timestamp[:19] }}</div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-gray-500">Nessuna visita registrata</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Tab -->
+            <div id="content-comments" class="tab-content p-6 hidden">
+                <h2 class="text-2xl font-bold mb-4">Commenti al Blog</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Nome</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Post</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Commento</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Stato</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Data</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for comment in comments %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ comment.name }}</td>
+                                <td class="px-4 py-3">{{ comment.email }}</td>
+                                <td class="px-4 py-3">{{ comment.post }}</td>
+                                <td class="px-4 py-3 max-w-xs truncate">{{ comment.message }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium
+                                        {% if comment.status == 'Approvato' %}bg-green-100 text-green-800
+                                        {% elif comment.status == 'In Moderazione' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ comment.status }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ comment.timestamp[:10] }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-10 text-gray-500">Nessun commento trovato</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Downloads Tab -->
+            <div id="content-downloads" class="tab-content p-6 hidden">
+                <h2 class="text-2xl font-bold mb-4">Download Software - Sistematica Commerciale</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Nome</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Cognome</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Data Download</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for download in downloads %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ download.nome }}</td>
+                                <td class="px-4 py-3">{{ download.cognome }}</td>
+                                <td class="px-4 py-3">{{ download.email }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ download.timestamp[:19].replace('T', ' ') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-10 text-gray-500">Nessun download registrato</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if downloads %}
+                <div class="mt-4">
+                    <button onclick="exportDownloads()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        Esporta Email CSV
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Posts Tab -->
+            <div id="content-posts" class="tab-content p-6 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Gestione Post</h2>
+                    <a href="{{ url_for('admin_new_post') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        + Nuovo Post
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Titolo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Data Pubblicazione</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for post in posts %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <a href="{{ url_for('post', post_slug=post.post_id) }}" target="_blank" class="text-blue-600 hover:underline">{{ post.title }}</a>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ post.date[:10] }}</td>
+                                <td class="px-6 py-4">
+                                    <a href="{{ url_for('admin_edit_post', post_id=post.id) }}" class="text-indigo-600 hover:text-indigo-900 mr-4">Modifica</a>
+                                    <form action="{{ url_for('admin_delete_post', post_id=post.id) }}" method="post" class="inline-block" onsubmit="return confirm('Sei sicuro di voler eliminare questo post?');">
+                                        <button type="submit" class="text-red-600 hover:text-red-900">Elimina</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-10 text-gray-500">Nessun post trovato</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+
+            // Remove active styles from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Show selected tab
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+
+            // Add active styles to clicked button
+            const btn = document.getElementById('tab-' + tabName);
+            btn.classList.remove('border-transparent', 'text-gray-500');
+            btn.classList.add('border-blue-500', 'text-blue-600');
+        }
+
+        // Export downloads to CSV
+        function exportDownloads() {
+            const downloads = {{ downloads|tojson }};
+            let csv = 'Nome,Cognome,Email,Data\n';
+
+            downloads.forEach(d => {
+                csv += `"${d.nome}","${d.cognome}","${d.email}","${d.timestamp}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'downloads_software.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
 </body>
 </html>
