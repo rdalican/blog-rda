@@ -197,7 +197,7 @@ def track_visit():
                     "Page": {"title": [{"text": {"content": page}}]},
                     "IP Address": {"rich_text": [{"text": {"content": ip_address[:100]}}]},
                     "User Agent": {"rich_text": [{"text": {"content": user_agent[:2000]}}]},
-                    "Referrer": {"rich_text": [{"text": {"content": referrer[:2000]}}]}
+                    "Referrer ": {"rich_text": [{"text": {"content": referrer[:2000]}}]}
                 }
             )
         except Exception as e:
