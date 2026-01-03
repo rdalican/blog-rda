@@ -651,35 +651,33 @@ def admin_send_newsletter():
             flash('Nessun iscritto attivo trovato!', 'error')
             return redirect(url_for('admin_dashboard'))
 
-        # Send emails using SendGrid
-        import sendgrid
-        from sendgrid.helpers.mail import Mail, Email, To, Content
-
-        sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY'))
-        from_email = Email(os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@blog-rda.com'))
+        # Send emails using Flask-Mail (Gmail SMTP)
+        from flask_mail import Message
 
         sent_count = 0
         failed_count = 0
 
         for subscriber in subscribers:
             try:
-                to_email = To(subscriber['email'])
-                content = Content("text/html", body)
-                mail = Mail(from_email, to_email, subject, content)
+                msg = Message(
+                    subject=subject,
+                    recipients=[subscriber['email']],
+                    html=body,
+                    sender=app.config.get('MAIL_DEFAULT_SENDER', 'roberto.dalicandro@gmail.com')
+                )
 
-                response = sg.client.mail.send.post(request_body=mail.get())
-
-                if response.status_code in [200, 201, 202]:
-                    sent_count += 1
-                else:
-                    failed_count += 1
-                    print(f"Failed to send to {subscriber['email']}: {response.status_code}", flush=True)
+                mail.send(msg)
+                sent_count += 1
+                print(f"[NEWSLETTER] Sent to {subscriber['email']}", flush=True)
 
             except Exception as e:
                 failed_count += 1
-                print(f"Error sending to {subscriber['email']}: {e}", flush=True)
+                print(f"[NEWSLETTER] Failed to send to {subscriber['email']}: {e}", flush=True)
 
-        flash(f'Newsletter inviata con successo a {sent_count} iscritti! Falliti: {failed_count}', 'success')
+        if sent_count > 0:
+            flash(f'Newsletter inviata con successo a {sent_count} iscritti! Falliti: {failed_count}', 'success')
+        else:
+            flash(f'Errore: nessuna email inviata. Falliti: {failed_count}', 'error')
 
     except Exception as e:
         print(f"[NEWSLETTER] Error: {e}", flush=True)
