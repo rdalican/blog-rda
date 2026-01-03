@@ -158,10 +158,16 @@ def send_email(to_email, subject, html_content):
 
 # Notion Manager Initialization
 try:
+    print("[INIT] Starting NotionManager initialization...", flush=True)
     notion = NotionManager()
+    print("[INIT] NotionManager created successfully", flush=True)
 except Exception as e:
-    print(f"Error initializing Notion Manager: {e}")
+    print(f"[ERROR] Error initializing Notion Manager: {e}", flush=True)
+    import traceback
+    traceback.print_exc()
     notion = None
+
+print("[INIT] Registering Flask routes and middleware...", flush=True)
 
 # --- Analytics Tracking Middleware ---
 @app.before_request
@@ -1102,14 +1108,15 @@ def upload_image():
         file.save(filepath)
         return {'location': f'/static/images/{filename}'}
 
+@app.route('/test_copilot')
+def test_copilot():
+    print("DEBUG: Test Copilot route called", flush=True)
+    return "Test Copilot OK"
+
+print("[INIT] All routes registered successfully. App ready!", flush=True)
+
 if __name__ == '__main__':
     # For local development only
     # In production, Gunicorn will handle this
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=not IS_PRODUCTION)
-
-
-@app.route('/test_copilot')
-def test_copilot():
-    print("DEBUG: Test Copilot route called", flush=True)
-    return "Test Copilot OK"
