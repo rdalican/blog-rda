@@ -7,7 +7,7 @@ backlog = 2048
 
 # Worker processes
 workers = 1
-worker_class = 'sync'
+worker_class = 'gevent'
 worker_connections = 1000
 timeout = 0  # Disable timeout
 keepalive = 5
