@@ -37,47 +37,11 @@ class NotionManager:
             raise ValueError("Token Notion o Database ID mancanti nel file Config_Notion.env")
 
         # Initialize Notion client with timeout
-        self.notion = Client(auth=self.token, timeout_ms=10000)
+        self.notion = Client(auth=self.token, timeout_ms=5000)
 
-        # Validate database connections in background to avoid blocking app startup
-        from threading import Thread
-
-        def validate_databases():
-            # Test connections and set db_ids to None on failure
-            try:
-                self.notion.databases.retrieve(self.contacts_db_id)
-                print("[OK] Database contatti trovato!", flush=True)
-            except Exception as e:
-                print(f"[WARNING] Impossibile accedere al database contatti: {e}. La funzionalità di contatto sarà disabilitata.", flush=True)
-                self.contacts_db_id = None
-
-            try:
-                self.notion.databases.retrieve(self.comments_db_id)
-                print("[OK] Database commenti trovato!", flush=True)
-            except Exception as e:
-                print(f"[WARNING] Impossibile accedere al database commenti: {e}. La funzionalità dei commenti sarà disabilitata.", flush=True)
-                self.comments_db_id = None
-
-            if self.download_db_id:
-                try:
-                    self.notion.databases.retrieve(self.download_db_id)
-                    print("[OK] Database download trovato!", flush=True)
-                except Exception as e:
-                    print(f"[WARNING] Impossibile accedere al database download: {e}. La funzionalità di download sarà disabilitata.", flush=True)
-                    self.download_db_id = None
-
-            if self.posts_db_id:
-                try:
-                    self.notion.databases.retrieve(self.posts_db_id)
-                    print("[OK] Database posts trovato!", flush=True)
-                except Exception as e:
-                    print(f"[WARNING] Impossibile accedere al database posts: {e}. La funzionalità del blog sarà disabilitata.", flush=True)
-                    self.posts_db_id = None
-
-        # Run database validation in background thread
-        validation_thread = Thread(target=validate_databases)
-        validation_thread.daemon = True
-        validation_thread.start()
+        # Skip database validation during initialization to speed up startup
+        # Databases will be validated lazily on first use
+        print("[INIT] NotionManager initialized successfully", flush=True)
 
     def add_contact(self, name, email, message, company=None):
         """
