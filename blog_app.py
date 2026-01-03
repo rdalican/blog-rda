@@ -181,7 +181,7 @@ def track_visit():
             if not analytics_db_id:
                 return
 
-            notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+            notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
             # Get visitor info
             ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
@@ -519,7 +519,7 @@ def newsletter_subscribe():
             print("[NEWSLETTER] NOTION_NEWSLETTER_DB_ID not configured", flush=True)
             return json.dumps({'success': False, 'message': 'Servizio non disponibile.'}), 500
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         # Check if email already exists
         existing = notion_client.databases.query(
@@ -623,7 +623,7 @@ def admin_send_newsletter():
             flash('Database Newsletter non configurato!', 'error')
             return redirect(url_for('admin_dashboard'))
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         # Query active subscribers
         results = notion_client.databases.query(
@@ -701,7 +701,7 @@ def get_analytics_stats():
                 'recent_visits': []
             }
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         # Query all analytics entries
         results = notion_client.databases.query(
@@ -772,7 +772,7 @@ def get_comments_data():
         if not comments_db_id:
             return []
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         results = notion_client.databases.query(
             database_id=comments_db_id,
@@ -814,7 +814,7 @@ def get_downloads_data():
         if not downloads_db_id:
             return []
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         results = notion_client.databases.query(
             database_id=downloads_db_id,
@@ -852,7 +852,7 @@ def get_newsletter_data():
         if not newsletter_db_id:
             return []
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         results = notion_client.databases.query(
             database_id=newsletter_db_id,
@@ -911,7 +911,7 @@ def auto_add_to_newsletter(name, email, source):
             print(f"[NEWSLETTER AUTO] NOTION_NEWSLETTER_DB_ID not configured", flush=True)
             return False
 
-        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
         # Check if email already exists
         existing = notion_client.databases.query(
