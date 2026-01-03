@@ -600,6 +600,93 @@ def logout():
     session.pop('is_admin', None)
     return redirect(url_for('index'))
 
+@app.route('/admin/send-newsletter', methods=['POST'])
+def admin_send_newsletter():
+    """Send newsletter to all active subscribers"""
+    if not session.get('is_admin'):
+        return redirect(url_for('admin_login'))
+
+    try:
+        subject = request.form.get('subject')
+        body = request.form.get('body')
+        send_to_all = request.form.get('send_to_all') == 'on'
+
+        if not subject or not body:
+            flash('Oggetto e corpo email sono obbligatori!', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        # Get newsletter subscribers
+        from notion_client import Client
+        newsletter_db_id = os.environ.get('NOTION_NEWSLETTER_DB_ID')
+
+        if not newsletter_db_id:
+            flash('Database Newsletter non configurato!', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        notion_client = Client(auth=os.environ.get('NOTION_TOKEN'))
+
+        # Query active subscribers
+        results = notion_client.databases.query(
+            database_id=newsletter_db_id,
+            filter={
+                "property": "Attivo",
+                "checkbox": {
+                    "equals": True
+                }
+            }
+        )
+
+        subscribers = []
+        for entry in results.get('results', []):
+            props = entry['properties']
+
+            email_prop = props.get('Email', {}).get('email')
+            name_prop = props.get('Nome', {}).get('rich_text', [])
+            name = name_prop[0].get('text', {}).get('content', 'Subscriber') if name_prop else 'Subscriber'
+
+            if email_prop:
+                subscribers.append({'email': email_prop, 'name': name})
+
+        if not subscribers:
+            flash('Nessun iscritto attivo trovato!', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        # Send emails using SendGrid
+        import sendgrid
+        from sendgrid.helpers.mail import Mail, Email, To, Content
+
+        sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY'))
+        from_email = Email(os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@blog-rda.com'))
+
+        sent_count = 0
+        failed_count = 0
+
+        for subscriber in subscribers:
+            try:
+                to_email = To(subscriber['email'])
+                content = Content("text/html", body)
+                mail = Mail(from_email, to_email, subject, content)
+
+                response = sg.client.mail.send.post(request_body=mail.get())
+
+                if response.status_code in [200, 201, 202]:
+                    sent_count += 1
+                else:
+                    failed_count += 1
+                    print(f"Failed to send to {subscriber['email']}: {response.status_code}", flush=True)
+
+            except Exception as e:
+                failed_count += 1
+                print(f"Error sending to {subscriber['email']}: {e}", flush=True)
+
+        flash(f'Newsletter inviata con successo a {sent_count} iscritti! Falliti: {failed_count}', 'success')
+
+    except Exception as e:
+        print(f"[NEWSLETTER] Error: {e}", flush=True)
+        flash(f'Errore durante l\'invio: {str(e)}', 'error')
+
+    return redirect(url_for('admin_dashboard'))
+
 # --- Admin Helper Functions ---
 def get_analytics_stats():
     """Get analytics statistics from Notion"""
