@@ -229,8 +229,15 @@ def inject_now():
     return {'now': datetime.now(timezone.utc)}
 
 # --- Routes ---
+@app.route('/health')
+def health():
+    """Simple health check endpoint for Railway"""
+    print("[HEALTH] Health check requested", flush=True)
+    return {'status': 'ok'}, 200
+
 @app.route('/')
 def index():
+    print("[REQUEST] Index page requested", flush=True)
     return render_template('index.html')
 
 @app.route('/about')
