@@ -112,11 +112,21 @@ def send_email_sendgrid(to_email, subject, html_content):
         print(f"[SENDGRID] Subject: {subject}", flush=True)
 
         message = SendGridMail(
-            from_email=from_email,
+            from_email=(from_email, 'Roberto D\'Alicandro'),
             to_emails=to_email,
             subject=subject,
             html_content=html_content
         )
+
+        # Add reply-to header
+        message.reply_to = from_email
+
+        # Add categories for tracking
+        message.add_category('newsletter')
+
+        # Add custom headers to improve deliverability
+        message.add_header('X-Priority', '3')
+        message.add_header('Importance', 'Normal')
 
         print(f"[SENDGRID] Message created, attempting to send...", flush=True)
         sg = SendGridAPIClient(api_key)
