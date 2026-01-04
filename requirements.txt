@@ -27,4 +27,4 @@ certifi==2024.7.4
 
 # Production WSGI Server (per Railway)
 gunicorn==21.2.0
-gevent==24.2.1
+eventlet==0.35.2
