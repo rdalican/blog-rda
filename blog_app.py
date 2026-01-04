@@ -685,28 +685,25 @@ def admin_send_newsletter():
             flash('Nessun iscritto attivo trovato!', 'error')
             return redirect(url_for('admin_dashboard'))
 
-        # Send emails using Flask-Mail (Gmail SMTP)
-        from flask_mail import Message
-
+        # Send emails using send_email() with SendGrid/Resend/Gmail fallback
         sent_count = 0
         failed_count = 0
 
         for subscriber in subscribers:
             try:
-                msg = Message(
-                    subject=subject,
-                    recipients=[subscriber['email']],
-                    html=body,
-                    sender=app.config.get('MAIL_DEFAULT_SENDER', 'roberto.dalicandro@gmail.com')
-                )
+                print(f"[NEWSLETTER] Attempting to send to {subscriber['email']}", flush=True)
+                success, response = send_email(subscriber['email'], subject, body)
 
-                mail.send(msg)
-                sent_count += 1
-                print(f"[NEWSLETTER] Sent to {subscriber['email']}", flush=True)
+                if success:
+                    sent_count += 1
+                    print(f"[NEWSLETTER] Successfully sent to {subscriber['email']}: {response}", flush=True)
+                else:
+                    failed_count += 1
+                    print(f"[NEWSLETTER] Failed to send to {subscriber['email']}: {response}", flush=True)
 
             except Exception as e:
                 failed_count += 1
-                print(f"[NEWSLETTER] Failed to send to {subscriber['email']}: {e}", flush=True)
+                print(f"[NEWSLETTER] Exception sending to {subscriber['email']}: {e}", flush=True)
 
         if sent_count > 0:
             flash(f'Newsletter inviata con successo a {sent_count} iscritti! Falliti: {failed_count}', 'success')
