@@ -208,8 +208,14 @@ def track_visit():
     if request.path.startswith('/static') or request.path.startswith('/admin'):
         return
 
+    # Capture request data BEFORE starting thread (to avoid context issues)
+    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+    user_agent = request.headers.get('User-Agent', 'Unknown')
+    referrer = request.headers.get('Referer', 'Direct')
+    page = request.path
+
     # Track visit asynchronously to not block the request
-    def log_visit_async():
+    def log_visit_async(ip_addr, user_ag, ref, pg):
         try:
             from notion_client import Client
             from datetime import datetime
@@ -220,29 +226,23 @@ def track_visit():
 
             notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
-            # Get visitor info
-            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-            user_agent = request.headers.get('User-Agent', 'Unknown')
-            referrer = request.headers.get('Referer', 'Direct')
-            page = request.path
-
             # Create new analytics entry
             notion_client.pages.create(
                 parent={"database_id": analytics_db_id},
                 properties={
                     "Timestamp": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
-                    "Page": {"title": [{"text": {"content": page}}]},
-                    "IP Address": {"rich_text": [{"text": {"content": ip_address[:100]}}]},
-                    "User Agent": {"rich_text": [{"text": {"content": user_agent[:2000]}}]},
-                    "Referrer ": {"rich_text": [{"text": {"content": referrer[:2000]}}]}
+                    "Page": {"title": [{"text": {"content": pg}}]},
+                    "IP Address": {"rich_text": [{"text": {"content": ip_addr[:100]}}]},
+                    "User Agent": {"rich_text": [{"text": {"content": user_ag[:2000]}}]},
+                    "Referrer ": {"rich_text": [{"text": {"content": ref[:2000]}}]}
                 }
             )
         except Exception as e:
             print(f"[ANALYTICS] Failed to log visit: {e}", flush=True)
 
-    # Run in background thread
+    # Run in background thread with captured data
     from threading import Thread
-    thread = Thread(target=log_visit_async)
+    thread = Thread(target=log_visit_async, args=(ip_address, user_agent, referrer, page))
     thread.daemon = True
     thread.start()
 
