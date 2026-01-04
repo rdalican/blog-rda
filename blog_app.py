@@ -98,7 +98,15 @@ def send_email_gmail(to_email, subject, html_content):
 def send_email_sendgrid(to_email, subject, html_content):
     """Send email using SendGrid API"""
     try:
+        api_key = os.environ.get('SENDGRID_API_KEY')
         from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'roberto.dalicandro@gmail.com')
+
+        print(f"[SENDGRID] Starting email send...", flush=True)
+        print(f"[SENDGRID] API Key present: {'Yes' if api_key else 'No'}", flush=True)
+        print(f"[SENDGRID] API Key length: {len(api_key) if api_key else 0}", flush=True)
+        print(f"[SENDGRID] From: {from_email}", flush=True)
+        print(f"[SENDGRID] To: {to_email}", flush=True)
+        print(f"[SENDGRID] Subject: {subject}", flush=True)
 
         message = SendGridMail(
             from_email=from_email,
@@ -107,13 +115,18 @@ def send_email_sendgrid(to_email, subject, html_content):
             html_content=html_content
         )
 
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        print(f"[SENDGRID] Message created, attempting to send...", flush=True)
+        sg = SendGridAPIClient(api_key)
         response = sg.send(message)
 
         print(f"[SENDGRID] Email sent successfully. Status: {response.status_code}", flush=True)
         return True, f"SendGrid status {response.status_code}"
     except Exception as e:
-        print(f"[SENDGRID] Failed to send email: {e}", flush=True)
+        print(f"[SENDGRID] FAILED - Exception type: {type(e).__name__}", flush=True)
+        print(f"[SENDGRID] FAILED - Error message: {e}", flush=True)
+        import traceback
+        print(f"[SENDGRID] FAILED - Traceback:", flush=True)
+        traceback.print_exc()
         return False, str(e)
 
 # Helper function to send email via Resend
