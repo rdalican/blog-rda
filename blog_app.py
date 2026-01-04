@@ -29,6 +29,9 @@ IS_PRODUCTION = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PRODUCT
 if IS_PRODUCTION:
     app.config['DEBUG'] = False
     print("--- RUNNING IN PRODUCTION MODE ---")
+    print(f"[ENV CHECK] SENDGRID_API_KEY present: {'Yes' if os.environ.get('SENDGRID_API_KEY') else 'No'}", flush=True)
+    if os.environ.get('SENDGRID_API_KEY'):
+        print(f"[ENV CHECK] SENDGRID_API_KEY length: {len(os.environ.get('SENDGRID_API_KEY'))}", flush=True)
 else:
     app.config['DEBUG'] = True
     print("--- RUNNING IN DEVELOPMENT MODE ---")
@@ -152,8 +155,13 @@ def send_email_resend(to_email, subject, html_content):
 # Unified email sending function with fallback
 def send_email(to_email, subject, html_content):
     """Send email using available provider (SendGrid -> Resend -> Gmail SMTP)"""
+    print(f"[EMAIL] Starting email send to {to_email}", flush=True)
+    print(f"[EMAIL] Environment check - SENDGRID_API_KEY: {'SET' if os.environ.get('SENDGRID_API_KEY') else 'NOT SET'}", flush=True)
+    print(f"[EMAIL] Environment check - RESEND_API_KEY: {'SET' if os.environ.get('RESEND_API_KEY') else 'NOT SET'}", flush=True)
+
     # Try SendGrid first if API key is configured
-    if os.environ.get('SENDGRID_API_KEY'):
+    sendgrid_key = os.environ.get('SENDGRID_API_KEY')
+    if sendgrid_key:
         success, response = send_email_sendgrid(to_email, subject, html_content)
         if success:
             return True, response
