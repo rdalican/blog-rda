@@ -1,1 +1,1 @@
-web: gunicorn -c gunicorn_config.py blog_app:app
+web: gunicorn --worker-class gevent --workers 1 --timeout 0 --bind 0.0.0.0:$PORT --access-logfile - --error-logfile - blog_app:app
