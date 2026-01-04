@@ -173,10 +173,6 @@ print("[INIT] Registering Flask routes and middleware...", flush=True)
 @app.before_request
 def track_visit():
     """Track page visits to Notion Analytics database"""
-    # TEMPORARILY DISABLED for Railway deployment debugging
-    # Skip tracking to avoid blocking during health checks
-    return
-
     # Skip tracking for static files and admin routes
     if request.path.startswith('/static') or request.path.startswith('/admin'):
         return
