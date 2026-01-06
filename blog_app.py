@@ -744,14 +744,27 @@ def get_analytics_stats():
 
         notion_client = Client(auth=os.environ.get('NOTION_TOKEN'), timeout_ms=10000)
 
-        # Query all analytics entries
-        results = notion_client.databases.query(
-            database_id=analytics_db_id,
-            sorts=[{"timestamp": "created_time", "direction": "descending"}],
-            page_size=100
-        )
+        # Query all analytics entries with pagination to get ALL visits
+        visits = []
+        has_more = True
+        start_cursor = None
 
-        visits = results.get('results', [])
+        while has_more:
+            query_params = {
+                "database_id": analytics_db_id,
+                "sorts": [{"timestamp": "created_time", "direction": "descending"}],
+                "page_size": 100
+            }
+
+            if start_cursor:
+                query_params["start_cursor"] = start_cursor
+
+            results = notion_client.databases.query(**query_params)
+
+            visits.extend(results.get('results', []))
+            has_more = results.get('has_more', False)
+            start_cursor = results.get('next_cursor')
+
         total_visits = len(visits)
 
         # Count unique IPs
