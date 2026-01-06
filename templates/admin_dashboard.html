@@ -55,6 +55,25 @@
             </div>
         </div>
 
+        <!-- Advanced Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Bounce Rate</div>
+                <div class="text-3xl font-bold text-red-600">{{ analytics.bounce_rate }}%</div>
+                <div class="text-xs text-gray-500 mt-1">% visitatori con 1 sola pagina</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Pagine per Sessione</div>
+                <div class="text-3xl font-bold text-indigo-600">{{ analytics.pages_per_session }}</div>
+                <div class="text-xs text-gray-500 mt-1">Media pagine viste per visita</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-gray-500 text-sm font-medium">Fonti di Traffico</div>
+                <div class="text-3xl font-bold text-teal-600">{{ analytics.top_referrers|length }}</div>
+                <div class="text-xs text-gray-500 mt-1">Sorgenti esterne</div>
+            </div>
+        </div>
+
         <!-- Tabs -->
         <div class="bg-white rounded-lg shadow mb-6">
             <div class="border-b border-gray-200">
@@ -99,22 +118,39 @@
                         </div>
                     </div>
 
-                    <!-- Recent Visits -->
+                    <!-- Top Referrers -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-3">Visite Recenti</h3>
-                        <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                            {% if analytics.recent_visits %}
-                                {% for visit in analytics.recent_visits %}
-                                <div class="py-2 border-b last:border-0">
-                                    <div class="font-medium text-gray-800">{{ visit.page }}</div>
-                                    <div class="text-sm text-gray-600">IP: {{ visit.ip }}</div>
-                                    <div class="text-xs text-gray-500">{{ visit.timestamp[:19] }}</div>
+                        <h3 class="text-lg font-semibold mb-3">Fonti di Traffico (Provenienza)</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            {% if analytics.top_referrers %}
+                                {% for ref_data in analytics.top_referrers %}
+                                <div class="flex justify-between items-center py-2 border-b last:border-0">
+                                    <span class="text-gray-700 truncate max-w-xs" title="{{ ref_data.referrer }}">{{ ref_data.referrer }}</span>
+                                    <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">{{ ref_data.count }}</span>
                                 </div>
                                 {% endfor %}
                             {% else %}
-                                <p class="text-gray-500">Nessuna visita registrata</p>
+                                <p class="text-gray-500">Nessuna provenienza esterna (solo traffico diretto)</p>
                             {% endif %}
                         </div>
+                    </div>
+                </div>
+
+                <!-- Recent Visits Section -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold mb-3">Visite Recenti</h3>
+                    <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        {% if analytics.recent_visits %}
+                            {% for visit in analytics.recent_visits %}
+                            <div class="py-2 border-b last:border-0">
+                                <div class="font-medium text-gray-800">{{ visit.page }}</div>
+                                <div class="text-sm text-gray-600">IP: {{ visit.ip }}</div>
+                                <div class="text-xs text-gray-500">{{ visit.timestamp[:19] }}</div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-gray-500">Nessuna visita registrata</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>

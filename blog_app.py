@@ -767,45 +767,69 @@ def get_analytics_stats():
 
         total_visits = len(visits)
 
-        # Count unique IPs
+        # Count unique IPs and collect data for advanced metrics
         ips = set()
         pages = []
         recent = []
+        referrers = []
+        ip_visits = {}  # Track visits per IP for bounce rate and pages per session
 
         for visit in visits:
             props = visit['properties']
 
             # Extract IP
             ip_prop = props.get('IP Address', {}).get('rich_text', [])
-            if ip_prop:
-                ip = ip_prop[0].get('text', {}).get('content', '')
-                if ip:
-                    ips.add(ip)
+            ip = ip_prop[0].get('text', {}).get('content', '') if ip_prop else None
+            if ip:
+                ips.add(ip)
+                # Count visits per IP
+                if ip not in ip_visits:
+                    ip_visits[ip] = []
+                ip_visits[ip].append(visit)
 
             # Extract Page
             page_prop = props.get('Page', {}).get('title', [])
-            if page_prop:
-                page = page_prop[0].get('text', {}).get('content', '')
-                if page:
-                    pages.append(page)
+            page = page_prop[0].get('text', {}).get('content', '') if page_prop else None
+            if page:
+                pages.append(page)
+
+            # Extract Referrer
+            referrer_prop = props.get('Referrer ', {}).get('rich_text', [])
+            referrer = referrer_prop[0].get('text', {}).get('content', 'Direct') if referrer_prop else 'Direct'
+            if referrer and referrer != 'Direct':
+                referrers.append(referrer)
 
             # Recent visits (first 10)
             if len(recent) < 10:
                 recent.append({
-                    'page': page_prop[0].get('text', {}).get('content', '') if page_prop else 'N/A',
+                    'page': page or 'N/A',
                     'timestamp': visit.get('created_time', 'N/A'),
-                    'ip': ip_prop[0].get('text', {}).get('content', 'N/A') if ip_prop else 'N/A'
+                    'ip': ip or 'N/A'
                 })
 
         # Count page visits
         page_counts = Counter(pages)
         top_pages = [{'page': page, 'count': count} for page, count in page_counts.most_common(10)]
 
+        # Count referrers (top sources)
+        referrer_counts = Counter(referrers)
+        top_referrers = [{'referrer': ref, 'count': count} for ref, count in referrer_counts.most_common(10)]
+
+        # Calculate bounce rate (IPs with only 1 visit)
+        single_visit_ips = sum(1 for ip, visits_list in ip_visits.items() if len(visits_list) == 1)
+        bounce_rate = (single_visit_ips / len(ip_visits) * 100) if ip_visits else 0
+
+        # Calculate average pages per session (visits per IP)
+        pages_per_session = (total_visits / len(ip_visits)) if ip_visits else 0
+
         return {
             'total_visits': total_visits,
             'unique_visitors': len(ips),
             'top_pages': top_pages,
-            'recent_visits': recent
+            'recent_visits': recent,
+            'top_referrers': top_referrers,
+            'bounce_rate': round(bounce_rate, 1),
+            'pages_per_session': round(pages_per_session, 1)
         }
 
     except Exception as e:
@@ -814,7 +838,10 @@ def get_analytics_stats():
             'total_visits': 0,
             'unique_visitors': 0,
             'top_pages': [],
-            'recent_visits': []
+            'recent_visits': [],
+            'top_referrers': [],
+            'bounce_rate': 0,
+            'pages_per_session': 0
         }
 
 def get_comments_data():
